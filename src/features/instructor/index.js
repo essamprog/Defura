@@ -1,0 +1,10 @@
+export { default as InstructorDashboardPage }  from "./pages/InstructorDashboardPage";
+export { default as InstructorCoursesPage }    from "./pages/InstructorCoursesPage";
+export { default as InstructorStudentsPage }   from "./pages/InstructorStudentsPage";
+export { default as InstructorRevenuePage }    from "./pages/InstructorRevenuePage";
+export { default as InstructorFinancialsPage } from "./pages/InstructorFinancialsPage";
+export { default as AddNewLessonPage }         from "./pages/AddNewLessonPage";
+export { default as CreateCoursePage }         from "./pages/CreateCoursePage";
+export { default as EditCoursePage }           from "./pages/EditCoursePage";
+export { default as useInstructor }            from "./hooks/useInstructor";
+export { default as instructorService }        from "./services/instructorService";
