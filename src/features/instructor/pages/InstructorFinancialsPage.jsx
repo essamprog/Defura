@@ -65,8 +65,15 @@ const InstructorFinancialsPage = () => {
   const handleWithdraw = async () => {
     setError(null);
     setSuccess(null);
-    if (!amount || parseFloat(amount) < 100) {
+    const numericAmount = parseFloat(amount);
+    const available = data.summary?.availableBalance ?? 0;
+
+    if (!amount || numericAmount < 100) {
       setError("Minimum withdrawal amount is 100.");
+      return;
+    }
+    if (numericAmount > available) {
+      setError(`Amount exceeds your available withdrawable balance of $${available.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`);
       return;
     }
     setWithdrawing(true);
@@ -164,6 +171,7 @@ const InstructorFinancialsPage = () => {
                 onChange={e => setAmount(e.target.value)}
                 className={fieldCls + " pr-14"}
                 min="100"
+                max={data.summary?.availableBalance ?? 0}
                 step="0.01"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400">

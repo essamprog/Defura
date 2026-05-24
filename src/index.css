@@ -36,25 +36,55 @@
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 14px;
+    height: 14px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-gray-100;
+    background-color: #f1f5f9;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
+    background-color: #3b82f6;
+    border-radius: 10px;
+    border: 3px solid #f1f5f9; /* makes the thumb visually thin & centered */
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
+    background-color: #2563eb;
+  }
+
+  /* Scrollbar up/down arrows */
+  ::-webkit-scrollbar-button:single-button {
+    background-color: #f1f5f9;
+    display: block;
+    height: 14px;
+    width: 14px;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  /* Up arrow */
+  ::-webkit-scrollbar-button:single-button:vertical:decrement {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%233b82f6'%3E%3Cpolygon points='50,25 85,75 15,75'/%3E%3C/svg%3E");
+    background-size: 10px 10px;
+  }
+  ::-webkit-scrollbar-button:single-button:vertical:decrement:hover {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%232563eb'%3E%3Cpolygon points='50,25 85,75 15,75'/%3E%3C/svg%3E");
+  }
+
+  /* Down arrow */
+  ::-webkit-scrollbar-button:single-button:vertical:increment {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%233b82f6'%3E%3Cpolygon points='50,75 85,25 15,25'/%3E%3C/svg%3E");
+    background-size: 10px 10px;
+  }
+  ::-webkit-scrollbar-button:single-button:vertical:increment:hover {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%232563eb'%3E%3Cpolygon points='50,75 85,25 15,25'/%3E%3C/svg%3E");
   }
 
   /* Focus visible ring */
   :focus-visible {
-    outline: 2px solid theme(colors.blue.500);
+    outline: 2px solid #3b82f6;
     outline-offset: 2px;
   }
 
@@ -133,7 +163,7 @@
   .bg-grid-pattern {
     background-size: 40px 40px;
     background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   }
 }
 
@@ -143,7 +173,7 @@
   /* React range input */
   input[type="range"] {
     @apply w-full h-1.5 rounded-full appearance-none bg-gray-200 cursor-pointer;
-    accent-color: theme(colors.blue.600);
+    accent-color: #2563eb;
   }
 
   /* React select */
@@ -246,4 +276,52 @@
 /* ─── Slide-in animation ───────────────────────────────────────────────── */
 .slide-in-from-right-5 {
   animation: slideInFromRight 0.2s ease-out;
+}
+
+/* ─── Q&A Thread Tree Connectors (RTL Support) ────────────────────────── */
+.qa-thread-container {
+  position: relative;
+}
+
+.qa-reply-item::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  bottom: 0;
+  right: -26px;
+  width: 2px;
+  background-color: #e5e7eb; /* gray-200 */
+}
+
+[dir="ltr"] .qa-reply-item::before {
+  right: auto;
+  left: -26px;
+}
+
+.qa-reply-item:last-child::before {
+  bottom: auto;
+  height: 34px;
+}
+
+.qa-reply-item {
+  position: relative;
+}
+
+.qa-reply-connector {
+  position: absolute;
+  top: 22px;
+  right: -26px;
+  width: 26px;
+  height: 20px;
+  border-right: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e5e7eb;
+  border-bottom-right-radius: 12px;
+}
+
+[dir="ltr"] .qa-reply-connector {
+  right: auto;
+  left: -26px;
+  border-right: none;
+  border-left: 2px solid #e5e7eb;
+  border-bottom-left-radius: 12px;
 }

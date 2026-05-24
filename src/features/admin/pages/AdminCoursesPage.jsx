@@ -141,11 +141,13 @@ const AdminCoursesPage = () => {
                   <td className="px-4 py-3.5 text-sm font-semibold text-gray-900">{(c.revenue ?? 0) > 0 ? `$${(c.revenue ?? 0).toLocaleString()}` : "—"}</td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1">
-                      <button onClick={() => navigate(ROUTES.courseDetail(c._id))} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View"><Eye className="w-3.5 h-3.5" /></button>
-                      {c.status === "pending" && (<>
-                        <button onClick={() => setConfirm({ type:"approve", id:c._id })} className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Approve"><CheckCircle className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => setConfirm({ type:"reject",  id:c._id })} className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="Reject"><XCircle className="w-3.5 h-3.5" /></button>
-                      </>)}
+                      <button onClick={() => navigate(ROUTES.adminCoursePreview(c._id))} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View"><Eye className="w-3.5 h-3.5" /></button>
+                      {c.status === "pending" && (
+                        <>
+                          <button onClick={() => setConfirm({ type:"approve", id:c._id })} className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" title="Approve"><CheckCircle className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => setConfirm({ type:"reject",  id:c._id })} className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all" title="Reject"><XCircle className="w-3.5 h-3.5" /></button>
+                        </>
+                      )}
                       <button onClick={() => setConfirm({ type:"delete", id:c._id })} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>

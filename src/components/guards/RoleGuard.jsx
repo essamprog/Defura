@@ -1,9 +1,14 @@
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../../store";
 import { ROUTES } from "../../constants";
+import LoadingScreen from "../common/LoadingScreen";
 
 const RoleGuard = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, isHydrated } = useAuthStore();
+
+  if (!isHydrated) {
+    return <LoadingScreen />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to={ROUTES.LOGIN} replace />;
@@ -16,4 +21,4 @@ const RoleGuard = ({ children, allowedRoles }) => {
   return children;
 };
 
-export default RoleGuard;
+export default RoleGuard;

@@ -15,22 +15,22 @@ const STAT_CARDS = (stats) => [
     Icon: Wallet,
     bg: "#EDE9FE", color: "#7C3AED",
     label: "AVAILABLE BALANCE",
-    value: `$${stats?.revenue?.toLocaleString() ?? 0}`,
-    badge: "Available", badgeBg: "#F0FDF4", badgeColor: "#16A34A",
+    value: `$${(stats?.availableBalance ?? 0).toLocaleString()}`,
+    badge: "70% Net", badgeBg: "#F0FDF4", badgeColor: "#16A34A",
   },
   {
     Icon: Clock,
     bg: "#FEF3C7", color: "#D97706",
     label: "PENDING BALANCE",
-    value: "$0", // API doesn't provide pending in dashboard stats easily, but we can mock or use 0
+    value: `$${(stats?.pendingBalance ?? 0).toLocaleString()}`,
     badge: "7d Hold", badgeBg: "#FEF9C3", badgeColor: "#D97706",
   },
   {
     Icon: TrendingUp,
     bg: "#EDE9FE", color: "#7C3AED",
     label: "TOTAL EARNINGS",
-    value: `$${stats?.revenue?.toLocaleString() ?? 0}`,
-    badge: "+8.1%", badgeBg: "#F0FDF4", badgeColor: "#16A34A",
+    value: `$${(stats?.revenue ?? 0).toLocaleString()}`,
+    badge: "Gross", badgeBg: "#F0FDF4", badgeColor: "#16A34A",
   },
   {
     Icon: GraduationCap,
@@ -40,6 +40,7 @@ const STAT_CARDS = (stats) => [
     badge: "Active", badgeBg: "#EDE9FE", badgeColor: "#7C3AED",
   },
 ];
+
 
 const StatusBadge = ({ status }) => {
   let s = { bg: "#FEF9C3", color: "#854D0E", label: "Draft" };
@@ -150,7 +151,7 @@ const InstructorCoursesPage = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[380px]">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100">
@@ -165,118 +166,125 @@ const InstructorCoursesPage = () => {
               </tr>
             </thead>
             <tbody>
-              {courses.map(course => (
-                <tr
-                  key={course.id}
-                  className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
-                >
-                  {/* Course Name */}
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 shrink-0">
-                        <img
-                          src={course.thumbnail ?? course.image}
-                          alt=""
-                          className="w-full h-full object-cover"
+              {courses.map(course => {
+                const courseId = course.id ?? course._id;
+                return (
+                  <tr
+                    key={courseId}
+                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                  >
+                    {/* Course Name */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                          <img
+                            src={course.thumbnail ?? course.image}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <button
+                            onClick={() => navigate(ROUTES.instructorCourseDetail(courseId))}
+                            className="text-sm font-semibold text-gray-900 hover:text-violet-700 hover:underline text-left transition-colors"
+                          >
+                            {course.title}
+                          </button>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {course.status === "draft"
+                              ? `Draft – Last edited ${course.lastUpdated ?? course.lastEdited}`
+                              : `Published ${course.publishedAt}`}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 py-4">
+                      <StatusBadge status={course.status} />
+                    </td>
+
+                    {/* Rating */}
+                    <td className="px-6 py-4">
+                      {course.rating ? (
+                        <span className="flex items-center gap-1 text-sm font-semibold text-gray-700">
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          {course.rating}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">N/A</span>
+                      )}
+                    </td>
+
+                    {/* Students */}
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-semibold text-gray-900 mb-1.5">
+                        {course.students?.toLocaleString() ?? 0}
+                      </p>
+                      <div className="w-24 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${((course.students ?? 0) / (course.studentsMax ?? 1000)) * 100}%`,
+                            background: course.status === "draft" ? "#D1D5DB" : "#7C3AED",
+                          }}
                         />
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {course.title}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {course.status === "draft"
-                            ? `Draft – Last edited ${course.lastUpdated ?? course.lastEdited}`
-                            : `Published ${course.publishedAt}`}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Status */}
-                  <td className="px-6 py-4">
-                    <StatusBadge status={course.status} />
-                  </td>
-
-                  {/* Rating */}
-                  <td className="px-6 py-4">
-                    {course.rating ? (
-                      <span className="flex items-center gap-1 text-sm font-semibold text-gray-700">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        {course.rating}
+                    {/* Content */}
+                    <td className="px-6 py-4">
+                      <span className="flex items-center gap-1.5 text-sm text-gray-600">
+                        <BookOpen className="w-3.5 h-3.5 text-gray-400" />
+                        {course.lessons} Lessons
                       </span>
-                    ) : (
-                      <span className="text-sm text-gray-400">N/A</span>
-                    )}
-                  </td>
+                    </td>
 
-                  {/* Students */}
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-semibold text-gray-900 mb-1.5">
-                      {course.students?.toLocaleString() ?? 0}
-                    </p>
-                    <div className="w-24 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${((course.students ?? 0) / (course.studentsMax ?? 1000)) * 100}%`,
-                          background: course.status === "draft" ? "#D1D5DB" : "#7C3AED",
-                        }}
-                      />
-                    </div>
-                  </td>
+                    {/* Price */}
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-semibold text-gray-900">
+                        ${course.price.toFixed(2)}
+                      </span>
+                    </td>
 
-                  {/* Content */}
-                  <td className="px-6 py-4">
-                    <span className="flex items-center gap-1.5 text-sm text-gray-600">
-                      <BookOpen className="w-3.5 h-3.5 text-gray-400" />
-                      {course.lessons} Lessons
-                    </span>
-                  </td>
+                    {/* Actions */}
+                    <td className="px-6 py-4">
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setOpenMenu(openMenu === courseId ? null : courseId)
+                          }
+                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-400"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
 
-                  {/* Price */}
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-gray-900">
-                      ${course.price.toFixed(2)}
-                    </span>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-4">
-                    <div className="relative">
-                      <button
-                        onClick={() =>
-                          setOpenMenu(openMenu === course._id ? null : course._id)
-                        }
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-400"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-
-                      {openMenu === course._id && (
-                        <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-36">
-                          {[
-                            { label: "Preview", Icon: Eye,    action: () => navigate(ROUTES.courseDetail(course._id)) },
-                            { label: "Edit",    Icon: Edit,   action: () => navigate(ROUTES.editCourse(course._id)) },
-                            { label: "Delete",  Icon: Trash2, action: () => setDeleteId(course._id), danger: true },
-                          ].map(item => (
-                            <button
-                              key={item.label}
-                              onClick={() => { item.action(); setOpenMenu(null); }}
-                              className={`w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 transition-colors text-left ${
-                                item.danger ? "text-red-500" : "text-gray-700"
-                              }`}
-                            >
-                              <item.Icon className="w-3.5 h-3.5" />
-                              {item.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {openMenu === courseId && (
+                          <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-1 min-w-36">
+                            {[
+                              { label: "Manage",  Icon: BookOpen, action: () => navigate(ROUTES.instructorCourseDetail(courseId)) },
+                              { label: "Preview", Icon: Eye,    action: () => navigate(ROUTES.courseDetail(courseId)) },
+                              { label: "Edit",    Icon: Edit,   action: () => navigate(ROUTES.editCourse(courseId)) },
+                              { label: "Delete",  Icon: Trash2, action: () => setDeleteId(courseId), danger: true },
+                            ].map(item => (
+                              <button
+                                key={item.label}
+                                onClick={() => { item.action(); setOpenMenu(null); }}
+                                className={`w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 transition-colors text-left ${
+                                  item.danger ? "text-red-500" : "text-gray-700"
+                                }`}
+                              >
+                                <item.Icon className="w-3.5 h-3.5" />
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

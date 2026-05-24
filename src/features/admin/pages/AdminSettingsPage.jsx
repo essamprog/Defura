@@ -56,7 +56,7 @@ const AdminSettingsPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Platform Settings</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Manage global configuration for EDUManage</p>
+          <p className="text-sm text-gray-500 mt-0.5">Manage global configuration for Defura-LMS</p>
         </div>
         <button
           onClick={handleSave}
@@ -69,8 +69,8 @@ const AdminSettingsPage = () => {
 
       <Section icon={Globe} title="General">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Platform Name" defaultValue="EDUManage" />
-          <Field label="Support Email" defaultValue="support@edumanage.com" type="email" />
+          <Field label="Platform Name" defaultValue="Defura-LMS" />
+          <Field label="Support Email" defaultValue="support@defura.com" type="email" />
           <Field label="Default Language" defaultValue="English" />
           <Field label="Timezone" defaultValue="Africa/Cairo" />
         </div>

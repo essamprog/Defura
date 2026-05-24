@@ -83,7 +83,7 @@ const AuthLayout = () => {
             <BookOpen className="w-4 h-4 text-white" />
           </div>
           <span className="text-lg font-bold text-gray-900">
-            Learn<span className="text-blue-600">Hub</span>
+            Defura<span className="text-blue-600">LMS</span>
           </span>
         </Link>
 

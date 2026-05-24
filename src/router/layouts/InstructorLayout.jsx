@@ -1,37 +1,62 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar, MobileSidebar, Header } from "../../components/layout";
 import { Toast } from "../../components/ui";
-import { useUIStore, useAuthStore } from "../../store";
+import { useUIStore, useAuthStore, useNotificationsStore, useCartStore } from "../../store";
 import { ROUTES } from "../../constants";
 import {
   LayoutDashboard,
-  BookOpen,
+  Video,
+  CirclePlus,
   Users,
-  DollarSign,
-  PlusCircle,
-  User,
+  BarChart2,
   Wallet,
   Bell,
   Settings,
+  Compass,
+  BookOpen,
+  User,
+  ShieldCheck,
+  ShoppingCart,
 } from "lucide-react";
 
 const InstructorLayout = () => {
   const { sidebarOpen, toasts, removeToast } = useUIStore();
   const { user } = useAuthStore();
+  const { unreadCount } = useNotificationsStore();
+  const { items } = useCartStore();
+
+  const cartBadge = items.length > 0 ? items.length : undefined;
 
   const instructorNavItems = [
-    { label: "Overview",  icon: LayoutDashboard, path: ROUTES.INSTRUCTOR_DASHBOARD },
-    { label: "My Courses", icon: BookOpen,         path: ROUTES.INSTRUCTOR_COURSES },
-    { label: "New Course", icon: PlusCircle,       path: ROUTES.INSTRUCTOR_CREATE_COURSE },
-    { label: "Students",   icon: Users,            path: ROUTES.INSTRUCTOR_STUDENTS },
-    { label: "Revenue",    icon: DollarSign,       path: ROUTES.INSTRUCTOR_REVENUE },
-    { label: "Financials", icon: Wallet,           path: ROUTES.INSTRUCTOR_FINANCIALS },
-    { label: "Notifications", icon: Bell,          path: ROUTES.NOTIFICATIONS },
-    { label: "Profile",    icon: User,             path: ROUTES.PROFILE },
+    // Instructor-specific pages
+    { label: "Overview",       icon: LayoutDashboard, path: ROUTES.INSTRUCTOR_DASHBOARD,    end: true },
+    { label: "My Courses",     icon: Video,           path: ROUTES.INSTRUCTOR_COURSES,      end: true },
+    { label: "Create Course",  icon: CirclePlus,      path: ROUTES.INSTRUCTOR_CREATE_COURSE, end: true },
+    { label: "My Students",    icon: Users,           path: ROUTES.INSTRUCTOR_STUDENTS,     end: true },
+    { label: "Analytics",      icon: BarChart2,       path: ROUTES.INSTRUCTOR_ANALYTICS,    end: true },
+    { label: "Financials",     icon: Wallet,          path: ROUTES.INSTRUCTOR_FINANCIALS,   end: true },
+    {
+      label: "Notifications",
+      icon: Bell,
+      path: ROUTES.INSTRUCTOR_NOTIFICATIONS,
+      end: true,
+      badge: unreadCount,
+    },
+    { label: "Settings",       icon: Settings,        path: ROUTES.INSTRUCTOR_SETTINGS,     end: true },
+
+    // ── Student pages — NO section label ────────────────────────
+    { label: "Browse Courses",        icon: Compass,  path: ROUTES.COURSES,                 end: true },
+    { label: "Cart",                  icon: ShoppingCart, path: ROUTES.CART,                end: true, badge: cartBadge },
+    { label: "My Purchased Courses",  icon: BookOpen, path: ROUTES.INSTRUCTOR_MY_LEARNING,  end: true },
+    { label: "Profile",               icon: User,     path: ROUTES.INSTRUCTOR_PROFILE,      end: true },
   ];
 
+  // Admin shortcut (only if logged in as admin using instructor layout)
   if (user?.role === "admin") {
-    instructorNavItems.push({ label: "Admin Dashboard", icon: Settings, path: ROUTES.ADMIN_DASHBOARD });
+    instructorNavItems.push(
+      { type: "section", label: "Admin" },
+      { label: "Admin Dashboard", icon: ShieldCheck, path: ROUTES.ADMIN_DASHBOARD, end: true }
+    );
   }
 
   return (

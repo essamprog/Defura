@@ -1,17 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Tabs = ({
   tabs = [],
   defaultIndex = 0,
+  activeIndex, // optional controlled active index
   onChange,
   variant = "underline",
   className = "",
 }) => {
-  const [active, setActive] = useState(defaultIndex);
+  const [internalActive, setInternalActive] = useState(defaultIndex);
+
+  useEffect(() => {
+    if (activeIndex !== undefined) {
+      setInternalActive(activeIndex);
+    }
+  }, [activeIndex]);
+
+  const active = activeIndex !== undefined ? activeIndex : internalActive;
 
   const handleChange = (index) => {
     if (tabs[index]?.disabled) return;
-    setActive(index);
+    if (activeIndex === undefined) {
+      setInternalActive(index);
+    }
     onChange?.(index, tabs[index]);
   };
 

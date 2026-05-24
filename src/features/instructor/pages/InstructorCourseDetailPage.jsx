@@ -7,10 +7,10 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Edit, Plus, BookOpen, Users, DollarSign,
-  Star, Clock, ChevronDown, ChevronRight, Play,
-  Eye, Pencil, Trash2, TrendingUp, Award, Lock,
+  Star, Clock, ChevronDown, Play,
+  Eye, Pencil, Trash2, Lock,
 } from "lucide-react";
-import { Button, Badge, Spinner, ProgressBar } from "@/components/ui";
+import { Button, Spinner } from "@/components/ui";
 import { ConfirmDialog, EmptyState } from "@/components/common";
 import { ROUTES } from "@/constants";
 import api from "@/services/api";
@@ -71,33 +71,29 @@ const LessonRow = ({ lesson, onEdit, onDelete }) => (
       <p className="text-sm font-semibold text-gray-800 truncate">
         {lesson.title}
       </p>
-      <div className="flex items-center gap-2 mt-0.5">
-        {/* duration_seconds from lessons table */}
+      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+        {/* Duration */}
         {lesson.duration_seconds > 0 && (
           <span className="text-[10px] text-gray-400">
             {fmtDuration(lesson.duration_seconds)}
           </span>
         )}
-        {/* visibility = 'public' | 'draft' */}
-        <span
-          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-          style={
-            lesson.visibility === "public"
-              ? { background: "#D1FAE5", color: "#065F46" }
-              : { background: "#FEF9C3", color: "#854D0E" }
-          }
-        >
-          {lesson.visibility === "public" ? "Public" : "Draft"}
-        </span>
-        {lesson.is_free ? (
+
+        {/* Visibility badge ONLY: Free Preview / Enrolled Only */}
+        {lesson.is_free_preview == 1 ? (
           <span
-            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-            style={{ background: "#DBEAFE", color: "#1D4ED8" }}
+            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"
+            style={{ background: "#DCFCE7", color: "#15803D" }}
           >
-            Free
+            <Eye className="w-2.5 h-2.5" /> Free Preview
           </span>
         ) : (
-          <Lock className="w-3 h-3 text-gray-300" />
+          <span
+            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"
+            style={{ background: "#EDE9FE", color: "#6D28D9" }}
+          >
+            <Lock className="w-2.5 h-2.5" /> Enrolled Only
+          </span>
         )}
       </div>
     </div>
@@ -133,7 +129,7 @@ const SectionAccordion = ({ section, defaultOpen = false, onEditLesson, onDelete
 
   return (
     <div className="border border-gray-100 rounded-2xl overflow-hidden">
-      {/* Section header — uses sections.order_index */}
+      {/* Section header */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-5 py-4 bg-white hover:bg-gray-50 transition-colors text-left"
@@ -170,7 +166,6 @@ const SectionAccordion = ({ section, defaultOpen = false, onEditLesson, onDelete
               No lessons yet.
             </p>
           ) : (
-            /* Sorted by order_index from lessons table */
             [...(section.lessons ?? [])]
               .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
               .map((lesson) => (
@@ -193,27 +188,24 @@ const InstructorCourseDetailPage = () => {
   const { id }   = useParams();
   const navigate = useNavigate();
 
-  const [course,    setCourse]    = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error,     setError]     = useState(null);
+  const [course,         setCourse]         = useState(null);
+  const [isLoading,      setIsLoading]      = useState(true);
+  const [error,          setError]          = useState(null);
   const [deleteLessonId, setDeleteLessonId] = useState(null);
-  const [deleting,  setDeleting]  = useState(false);
+  const [deleting,       setDeleting]       = useState(false);
 
-  // Fetch course detail from instructor/course_detail.php?id={id}
+  // ── Fetch course detail ───────────────────────────────────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
     const load = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const { data: res } = await api.get(
-          ENDPOINTS.INSTRUCTOR.COURSE_DETAIL(id)
-        );
+        const { data: res } = await api.get(ENDPOINTS.INSTRUCTOR.COURSE_DETAIL(id));
         setCourse(res.data?.course ?? null);
       } catch (err) {
         setError(
-          err.response?.data?.message ??
-            "Failed to load course. Please try again."
+          err.response?.data?.message ?? "Failed to load course. Please try again."
         );
       } finally {
         setIsLoading(false);
@@ -222,24 +214,27 @@ const InstructorCourseDetailPage = () => {
     load();
   }, [id]);
 
-  // Delete lesson
+  // ── Delete lesson ─────────────────────────────────────────────────────────
   const handleDeleteLesson = async () => {
     if (!deleteLessonId) return;
     setDeleting(true);
     try {
-      await api.delete(`${ENDPOINTS.INSTRUCTOR.LESSONS}?id=${deleteLessonId}`);
+      // delete_item.php expects JSON body: { id, type: "lesson" }
+      await api.delete(ENDPOINTS.INSTRUCTOR.DELETE_ITEM, {
+        data: { id: Number(deleteLessonId), type: "lesson" },
+      });
       // Refresh course data
       const { data: res } = await api.get(ENDPOINTS.INSTRUCTOR.COURSE_DETAIL(id));
       setCourse(res.data?.course ?? null);
     } catch (err) {
-      // Silent — could add a toast here
+      console.error("Delete lesson error:", err);
     } finally {
       setDeleting(false);
       setDeleteLessonId(null);
     }
   };
 
-  // ── Loading ────────────────────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-32">
@@ -274,39 +269,57 @@ const InstructorCourseDetailPage = () => {
     level,
     price,
     original_price,
-    thumbnail_url,         // courses.thumbnail_url
-    total_duration,        // courses.total_duration (seconds)
+    originalPrice,
+    thumbnail_url,
+    thumbnail,
+    total_duration,
+    totalDuration,
     total_lessons,
+    totalLessons,
     total_students,
-    average_rating,        // courses.average_rating (DECIMAL 3,2)
+    totalStudents,
+    average_rating,
+    avgRating,
     review_count,
+    reviewCount,
     is_bestseller,
+    isBestseller,
     language,
     published_at,
+    publishedAt,
     category,
     revenue,
-    curriculum = [],       // array of sections with nested lessons
+    curriculum = [],
   } = course;
 
-  const totalSections = curriculum.length;
+  const thumbnailSrc        = thumbnail_url ?? thumbnail ?? course.image ?? null;
+  const originalPriceValue  = original_price ?? originalPrice ?? null;
+  const totalLessonsValue   = total_lessons  ?? totalLessons  ?? 0;
+  const totalStudentsValue  = total_students ?? totalStudents ?? 0;
+  const totalDurationValue  = total_duration ?? totalDuration ?? 0;
+  const averageRatingValue  = average_rating ?? avgRating     ?? 0;
+  const reviewCountValue    = review_count   ?? reviewCount   ?? 0;
+  const isBestsellerValue   = is_bestseller  ?? isBestseller  ?? false;
+  const publishedAtValue    = published_at   ?? publishedAt   ?? null;
+  const totalSections       = curriculum.length;
   const discount =
-    original_price && original_price > price
-      ? Math.round(((original_price - price) / original_price) * 100)
+    originalPriceValue && originalPriceValue > price
+      ? Math.round(((originalPriceValue - price) / originalPriceValue) * 100)
       : 0;
 
   const STATUS_STYLE = {
-    draft:        { bg:"#FEF9C3", color:"#854D0E", label:"Draft" },
-    under_review: { bg:"#DBEAFE", color:"#1D4ED8", label:"Under Review" },
-    published:    { bg:"#D1FAE5", color:"#065F46", label:"Published" },
-    hidden:       { bg:"#F3F4F6", color:"#6B7280", label:"Hidden" },
-    archived:     { bg:"#FEE2E2", color:"#991B1B", label:"Archived" },
+    draft:        { bg: "#FEF9C3", color: "#854D0E", label: "Draft"       },
+    under_review: { bg: "#DBEAFE", color: "#1D4ED8", label: "Under Review"},
+    published:    { bg: "#D1FAE5", color: "#065F46", label: "Published"   },
+    hidden:       { bg: "#F3F4F6", color: "#6B7280", label: "Hidden"      },
+    archived:     { bg: "#FEE2E2", color: "#991B1B", label: "Archived"    },
   };
   const statusStyle = STATUS_STYLE[status] ?? STATUS_STYLE.draft;
 
   return (
     <div className="space-y-6">
 
-      {/* ── Back + Actions header ──────────────────────────────────────────── */}
+      {/* ── Back + Actions header ────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <button
           onClick={() => navigate(ROUTES.INSTRUCTOR_COURSES)}
@@ -347,20 +360,20 @@ const InstructorCourseDetailPage = () => {
         </div>
       </div>
 
-      {/* ── Course hero ───────────────────────────────────────────────────── */}
+      {/* ── Course hero ──────────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         <div className="flex flex-col lg:flex-row gap-0">
 
-          {/* Thumbnail — uses courses.thumbnail_url */}
-          <div className="lg:w-72 xl:w-80 aspect-video lg:aspect-auto shrink-0 bg-gray-100 overflow-hidden">
-            {thumbnail_url ? (
+          {/* Thumbnail */}
+          <div className="lg:w-96 xl:w-[28rem] aspect-video lg:aspect-auto shrink-0 bg-gray-100 overflow-hidden">
+            {thumbnailSrc ? (
               <img
-                src={thumbnail_url}
+                src={thumbnailSrc}
                 alt={title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain bg-gray-100"
               />
             ) : (
-              <div className="w-full h-full min-h-48 flex items-center justify-center bg-linear-to-br from-violet-100 to-indigo-100">
+              <div className="w-full h-full min-h-48 flex items-center justify-center bg-gradient-to-br from-violet-100 to-indigo-100">
                 <BookOpen className="w-16 h-16 text-violet-300" />
               </div>
             )}
@@ -377,14 +390,14 @@ const InstructorCourseDetailPage = () => {
                 >
                   {statusStyle.label}
                 </span>
-                {is_bestseller ? (
+                {isBestsellerValue && (
                   <span
                     className="text-xs font-bold px-2.5 py-1 rounded-full"
                     style={{ background: "#FEF3C7", color: "#92400E" }}
                   >
                     Bestseller
                   </span>
-                ) : null}
+                )}
                 {category && (
                   <span
                     className="text-xs font-semibold px-2.5 py-1 rounded-full"
@@ -397,22 +410,20 @@ const InstructorCourseDetailPage = () => {
               </div>
 
               {/* Title */}
-              <h1 className="text-xl font-bold text-gray-900 leading-snug mb-1">
-                {title}
-              </h1>
+              <h1 className="text-xl font-bold text-gray-900 leading-snug mb-1">{title}</h1>
               {subtitle && (
                 <p className="text-sm text-gray-500 leading-relaxed">{subtitle}</p>
               )}
 
-              {/* Rating row — uses courses.average_rating */}
-              {average_rating > 0 && (
+              {/* Rating */}
+              {averageRatingValue > 0 && (
                 <div className="flex items-center gap-2 mt-3">
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map((s) => (
                       <Star
                         key={s}
                         className={`w-3.5 h-3.5 ${
-                          s <= Math.round(average_rating)
+                          s <= Math.round(averageRatingValue)
                             ? "fill-amber-400 text-amber-400"
                             : "text-gray-200"
                         }`}
@@ -420,10 +431,10 @@ const InstructorCourseDetailPage = () => {
                     ))}
                   </div>
                   <span className="text-xs font-bold text-amber-600">
-                    {Number(average_rating).toFixed(1)}
+                    {Number(averageRatingValue).toFixed(1)}
                   </span>
                   <span className="text-xs text-gray-400">
-                    ({review_count?.toLocaleString()} reviews)
+                    ({reviewCountValue.toLocaleString()} reviews)
                   </span>
                 </div>
               )}
@@ -431,23 +442,21 @@ const InstructorCourseDetailPage = () => {
 
             {/* Meta footer */}
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-400 pt-3 border-t border-gray-100">
-              {total_duration > 0 && (
+              {totalDurationValue > 0 && (
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
-                  {fmtSeconds(total_duration)} total
+                  {fmtSeconds(totalDurationValue)} total
                 </span>
               )}
               <span className="flex items-center gap-1">
                 <BookOpen className="w-3.5 h-3.5" />
-                {total_lessons} lessons · {totalSections} sections
+                {totalLessonsValue} lessons · {totalSections} sections
               </span>
-              {language && (
-                <span>{language}</span>
-              )}
-              {published_at && (
+              {language && <span>{language}</span>}
+              {publishedAtValue && (
                 <span>
                   Published{" "}
-                  {new Date(published_at).toLocaleDateString("en-US", {
+                  {new Date(publishedAtValue).toLocaleDateString("en-US", {
                     month: "short", year: "numeric",
                   })}
                 </span>
@@ -457,7 +466,7 @@ const InstructorCourseDetailPage = () => {
         </div>
       </div>
 
-      {/* ── Stat cards ─────────────────────────────────────────────────────── */}
+      {/* ── Stat cards ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={DollarSign}
@@ -470,7 +479,7 @@ const InstructorCourseDetailPage = () => {
         <StatCard
           icon={Users}
           label="Students"
-          value={(total_students ?? 0).toLocaleString()}
+          value={totalStudentsValue.toLocaleString()}
           sub="Total enrolled"
           color="#7C3AED"
           bg="#EDE9FE"
@@ -479,19 +488,19 @@ const InstructorCourseDetailPage = () => {
           icon={Star}
           label="Avg Rating"
           value={
-            average_rating > 0
-              ? Number(average_rating).toFixed(1)
+            averageRatingValue > 0
+              ? Number(averageRatingValue).toFixed(1)
               : "No ratings"
           }
-          sub={`${review_count ?? 0} reviews`}
+          sub={`${reviewCountValue} reviews`}
           color="#D97706"
           bg="#FEF3C7"
         />
         <StatCard
           icon={BookOpen}
           label="Content"
-          value={`${total_lessons} lessons`}
-          sub={`${totalSections} sections · ${fmtSeconds(total_duration)}`}
+          value={`${totalLessonsValue} lessons`}
+          sub={`${totalSections} sections · ${fmtSeconds(totalDurationValue)}`}
           color="#1D4ED8"
           bg="#DBEAFE"
         />
@@ -507,10 +516,10 @@ const InstructorCourseDetailPage = () => {
             <span className="text-2xl font-bold text-gray-900">
               ${Number(price).toFixed(2)}
             </span>
-            {original_price && original_price > price && (
+            {originalPriceValue && originalPriceValue > price && (
               <>
                 <span className="text-sm text-gray-400 line-through">
-                  ${Number(original_price).toFixed(2)}
+                  ${Number(originalPriceValue).toFixed(2)}
                 </span>
                 <span
                   className="text-xs font-bold px-2 py-0.5 rounded-full"
@@ -535,9 +544,7 @@ const InstructorCourseDetailPage = () => {
       {/* ── Curriculum ───────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-gray-900">
-            Course Curriculum
-          </h2>
+          <h2 className="text-base font-bold text-gray-900">Course Curriculum</h2>
           <Button
             size="sm"
             leftIcon={<Plus className="w-4 h-4" />}
@@ -566,7 +573,6 @@ const InstructorCourseDetailPage = () => {
             />
           </div>
         ) : (
-          /* Sections sorted by order_index from sections table */
           <div className="space-y-3">
             {[...curriculum]
               .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
@@ -581,9 +587,7 @@ const InstructorCourseDetailPage = () => {
                       { state: { courseId: id, lesson } }
                     )
                   }
-                  onDeleteLesson={(lessonId) =>
-                    setDeleteLessonId(lessonId)
-                  }
+                  onDeleteLesson={(lessonId) => setDeleteLessonId(lessonId)}
                 />
               ))}
           </div>

@@ -4,6 +4,9 @@ import api from "@/services/api";
 
 const getCourseId = (course) => course?._id ?? course?.id ?? course?.course_id ?? null;
 
+/** Normalize any ID to string for type-safe comparison (avoids "5" !== 5 false negatives). */
+const toIdStr = (id) => (id == null ? "" : String(id));
+
 const normalizeCartItems = (items = []) =>
   items.map((c) => ({
     // Ensure CartPage/CheckoutPage can keep using existing field names
@@ -14,11 +17,14 @@ const normalizeCartItems = (items = []) =>
     image: c.image ?? c.thumbnail ?? c.thumbnail_url,
     thumbnail: c.thumbnail ?? c.thumbnail_url ?? c.image,
     thumbnail_url: c.thumbnail_url ?? c.thumbnail ?? c.image,
-    price: Number(c.price ?? 0),
+    // Parse price as float to prevent string concatenation in reduce()
+    price: parseFloat(c.price ?? 0) || 0,
     originalPrice: c.originalPrice ?? c.original_price ?? null,
-    duration: Number(c.duration ?? c.total_duration ?? 0),
+    // Widen duration fallback chain to cover all known API keys
+    duration: Number(c.duration ?? c.total_duration ?? c.course_duration ?? 0),
     level: c.level,
-    students: c.students,
+    // Widen students fallback chain to cover all known API keys
+    students: c.students ?? c.total_students ?? c.enrollment_count ?? c.enrollments ?? 0,
     instructor: c.instructor,
   }));
 
@@ -29,15 +35,17 @@ const useCartStore = create((set, get) => ({
   discount: 0,
   isLoading: false,
 
-  // ─── Computed ────────────────────────────────────────────
-  get totalItems() {
-    return get().items.length;
+  // ─── Computed selectors ──────────────────────────────────
+  // NOTE: Zustand does NOT support native JS getter syntax inside create().
+  // These are plain selector functions — call them as store.getSubtotal() etc.
+  getSubtotal: () => {
+    const items = get().items;
+    return items.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
   },
-  get subtotal() {
-    return get().items.reduce((sum, i) => sum + (Number(i.price) || 0), 0);
-  },
-  get total() {
-    return Math.max(0, get().subtotal - get().discount);
+  getTotal: () => {
+    const subtotal = get().getSubtotal();
+    const discount = get().discount;
+    return Math.max(0, subtotal - discount);
   },
 
   // ─── Server-backed cart ───────────────────────────────────
@@ -99,7 +107,8 @@ const useCartStore = create((set, get) => ({
     const prev = get().items;
     set({ items: [], coupon: null, discount: 0 });
     try {
-      await api.delete(`/cart/index.php`, { params: { action: "clear" } });
+      // action=clear must be in the URL query string, not axios params object
+      await api.delete(`/cart/index.php?action=clear`);
       return { success: true };
     } catch (err) {
       set({ items: prev });
@@ -107,7 +116,20 @@ const useCartStore = create((set, get) => ({
     }
   },
 
-  isInCart: (courseId) => get().items.some((i) => getCourseId(i) === courseId),
+
+  /**
+   * Check if a course is in the cart.
+   * Accepts a raw ID (number or string) or a course object.
+   * Uses string comparison to safely handle mixed number/string IDs from the API.
+   */
+  isInCart: (courseIdOrCourse) => {
+    const rawId = typeof courseIdOrCourse === "object" && courseIdOrCourse !== null
+      ? getCourseId(courseIdOrCourse)
+      : courseIdOrCourse;
+    if (rawId == null) return false;
+    const needle = toIdStr(rawId);
+    return get().items.some((i) => toIdStr(getCourseId(i)) === needle);
+  },
 
   // ─── Coupon (server-backed) ───────────────────────────────
   applyCoupon: async (code) => {

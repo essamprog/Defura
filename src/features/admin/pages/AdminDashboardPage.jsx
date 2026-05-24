@@ -1,6 +1,6 @@
 import { Users, BookOpen, DollarSign, ShoppingBag, TrendingUp, UserCheck, UserX, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Spinner } from "@/components/ui";
+import { Badge, Spinner, Avatar } from "@/components/ui";
 import { ROUTES } from "@/constants";
 import useAdmin from "../hooks/useAdmin";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
@@ -16,7 +16,7 @@ const AdminDashboardPage = () => {
   const CARDS = [
     { icon: Users,       label:"Total Users",     value: stats?.totalUsers?.toLocaleString() ?? 0,    sub:`${stats?.totalInstructors ?? 0} instructors`, color:"text-blue-600",    bg:"bg-blue-50" },
     { icon: BookOpen,    label:"Total Courses",    value: stats?.totalCourses ?? 0,                    sub:`${stats?.pendingCourses ?? 0} pending review`,color:"text-indigo-600",  bg:"bg-indigo-50" },
-    { icon: DollarSign,  label:"Platform Revenue", value:`$${((stats?.totalRevenue ?? 0)/1000).toFixed(0)}`, sub:"Total completed", color:"text-emerald-600", bg:"bg-emerald-50" },
+    { icon: DollarSign,  label:"Platform Net Revenue", value:`$${((stats?.totalRevenue ?? 0) * 0.30).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, sub:`Gross Sales: $${(stats?.totalRevenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (30% cut)`, color:"text-emerald-600", bg:"bg-emerald-50" },
     { icon: ShoppingBag, label:"Total Orders",     value: stats?.totalOrders?.toLocaleString() ?? 0,   sub:"Overall",   color:"text-amber-600",   bg:"bg-amber-50" },
   ];
 
@@ -73,9 +73,11 @@ const AdminDashboardPage = () => {
           <div className="space-y-3">
             {users.slice(0, 5).map(u => (
               <div key={u._id} className="flex items-center gap-2.5">
-                <div className={`w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600 shrink-0 overflow-hidden`}>
-                  {u.profile_picture ? <img src={u.profile_picture} alt="" className="w-full h-full object-cover" /> : (u.full_name?.charAt(0) || u.email?.charAt(0) || '?').toUpperCase()}
-                </div>
+                <Avatar
+                  src={u.profile_picture && !u.profile_picture.includes("default-avatar.png") ? u.profile_picture : null}
+                  name={u.full_name || u.email}
+                  size="sm"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-gray-800 truncate">{u.full_name || u.email}</p>
                   <p className="text-[10px] text-gray-400 capitalize">{u.role}</p>

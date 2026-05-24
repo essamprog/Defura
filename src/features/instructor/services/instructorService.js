@@ -6,6 +6,9 @@ const instructorService = {
   getDashboard: () =>
     api.get(ENDPOINTS.INSTRUCTOR.DASHBOARD),
 
+  getCategories: () =>
+    api.get(ENDPOINTS.INSTRUCTOR.CATEGORIES),
+
   getCourses: (params = {}) =>
     api.get(ENDPOINTS.INSTRUCTOR.COURSES, { params }),
 
@@ -19,7 +22,9 @@ const instructorService = {
     api.put(ENDPOINTS.INSTRUCTOR.UPDATE_COURSE(id), data),
 
   deleteCourse: (id) =>
-    api.delete(ENDPOINTS.INSTRUCTOR.DELETE_COURSE(id)),
+    // PHP backend reads the ID from json_decode(file_get_contents('php://input'))
+    // Axios DELETE requires { data: ... } to send a request body
+    api.delete(ENDPOINTS.INSTRUCTOR.DELETE_COURSE(id), { data: { id } }),
 
   getStudents: (params = {}) =>
     api.get(ENDPOINTS.INSTRUCTOR.STUDENTS, { params }),
@@ -29,6 +34,9 @@ const instructorService = {
 
   submitWithdrawal: (data) =>
     api.post(ENDPOINTS.INSTRUCTOR.FINANCIALS, data),
+
+  getCurriculum: (courseId) =>
+    api.get(ENDPOINTS.INSTRUCTOR.CURRICULUM, { params: { course_id: courseId } }),
 
   getLessons: (courseId) =>
     api.get(ENDPOINTS.INSTRUCTOR.LESSONS, {

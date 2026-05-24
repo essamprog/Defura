@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Spinner, Pagination } from "@/components/ui";
 import { EmptyState } from "@/components/common";
+import { resolveMediaUrl, COURSE_PLACEHOLDER } from "@/utils";
 import CourseCard from "../components/CourseCard";
 import CourseFilters from "../components/CourseFilters";
 import useCourses from "../hooks/useCourses";
@@ -184,8 +185,16 @@ const CoursesPage = () => {
                         onClick={() => {}}
                         className="group bg-white rounded-2xl border border-gray-100 overflow-hidden flex hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                       >
-                        <div className="w-48 shrink-0 overflow-hidden">
-                          <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <div className="w-48 shrink-0 overflow-hidden bg-gray-100">
+                          <img
+                            src={resolveMediaUrl(course.thumbnail ?? course.thumbnail_url ?? course.image) ?? COURSE_PLACEHOLDER}
+                            alt={course.title}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = COURSE_PLACEHOLDER;
+                            }}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
                         </div>
                         <div className="flex-1 p-4 flex flex-col justify-between">
                           <div>

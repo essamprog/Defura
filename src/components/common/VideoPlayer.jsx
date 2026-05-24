@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw } from "lucide-react";
+import { resolveMediaUrl } from "@/utils";
 
 // Lightweight custom video player using native HTML5 video
 // Swap out for react-player if needed: import ReactPlayer from 'react-player'
@@ -28,6 +29,46 @@ const VideoPlayer = ({
   const [current,  setCurrent]  = useState(0);
   const [showCtrl, setShowCtrl] = useState(true);
   const timerRef   = useRef(null);
+
+  const resolvedSrc    = useMemo(() => resolveMediaUrl(src), [src]);
+  const resolvedPoster = useMemo(() => resolveMediaUrl(poster), [poster]);
+
+  useEffect(() => {
+    setPlaying(false);
+    setProgress(0);
+    setCurrent(0);
+
+    // If autoPlay, attempt to play after src changes and sync React state
+    if (autoPlay && videoRef.current) {
+      const v = videoRef.current;
+      const tryPlay = () => {
+        v.play()
+          .then(() => { setPlaying(true); hideControls(); })
+          .catch(() => { /* Browser blocked autoplay — user must click */ });
+      };
+      // Wait for enough data to start
+      if (v.readyState >= 3) {
+        tryPlay();
+      } else {
+        v.addEventListener("canplay", tryPlay, { once: true });
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedSrc]);
+
+  if (!resolvedSrc) {
+    return (
+      <div
+        className={["relative bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center aspect-video", className].join(" ")}
+      >
+        {resolvedPoster ? (
+          <img src={resolvedPoster} alt="" className="w-full h-full object-cover opacity-60" />
+        ) : (
+          <p className="text-gray-500 text-sm px-4 text-center">No video available</p>
+        )}
+      </div>
+    );
+  }
 
   const hideControls = () => {
     timerRef.current = setTimeout(() => { if (playing) setShowCtrl(false); }, 3000);
@@ -90,24 +131,20 @@ const VideoPlayer = ({
     >
       {/* Video element */}
       <video
+        key={resolvedSrc}
         ref={videoRef}
-        src={src}
-        poster={poster}
+        src={resolvedSrc}
+        poster={resolvedPoster ?? undefined}
         autoPlay={autoPlay}
         muted={muted}
         className="w-full aspect-video"
         onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
         onTimeUpdate={handleTimeUpdate}
+        onPlay={() => { setPlaying(true); hideControls(); }}
+        onPause={() => { setPlaying(false); setShowCtrl(true); }}
         onEnded={() => { setPlaying(false); setShowCtrl(true); onEnded?.(); }}
         onClick={togglePlay}
       />
-
-      {/* Play/pause overlay */}
-      {!src && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-          <p className="text-gray-500 text-sm">No video source provided</p>
-        </div>
-      )}
 
       {/* Controls bar */}
       <div className={[
@@ -159,7 +196,7 @@ const VideoPlayer = ({
       </div>
 
       {/* Centre play button when paused */}
-      {!playing && src && (
+      {!playing && (
         <button
           onClick={togglePlay}
           className="absolute inset-0 flex items-center justify-center"

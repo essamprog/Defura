@@ -61,10 +61,10 @@ const EnrolledCourseCard = ({ enrollment }) => {
   const progressColor = isCompleted ? "green" : progress >= 50 ? "blue" : "blue";
 
   const handleContinue = () => {
-    if (next_lesson_id) {
-      navigate(ROUTES.learning(_id, next_lesson_id));
-    } else {
+    if (isCompleted || !next_lesson_id) {
       navigate(ROUTES.learning(_id, "start"));
+    } else {
+      navigate(ROUTES.learning(_id, next_lesson_id));
     }
   };
 
@@ -183,7 +183,7 @@ const EnrolledCourseCard = ({ enrollment }) => {
           }
         >
           {isCompleted ? (
-            <><Award className="w-3.5 h-3.5" /> View Certificate</>
+            <><Play className="w-3.5 h-3.5 fill-current" /> Watch Course</>
           ) : progress === 0 ? (
             <><Play className="w-3.5 h-3.5 fill-current" /> Start Learning</>
           ) : (

@@ -5,6 +5,13 @@ import { ROUTES } from "../../constants";
 import { useAuthStore, useUIStore } from "../../store";
 import Avatar from "../ui/Avatar";
 
+/**
+ * MobileSidebar — supports section dividers and unread badges.
+ *
+ * navItem shapes:
+ *   { type: "section", label: "Student Mode" }  → renders a section header
+ *   { label, icon, path, badge? }               → renders a NavLink
+ */
 const MobileSidebar = ({ navItems = [], accentColor = "blue" }) => {
   const { mobileSidebarOpen, closeMobileSidebar } = useUIStore();
   const { user, logout } = useAuthStore();
@@ -16,9 +23,7 @@ const MobileSidebar = ({ navItems = [], accentColor = "blue" }) => {
     } else {
       document.body.style.overflow = "";
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [mobileSidebarOpen]);
 
   const accent = {
@@ -47,18 +52,15 @@ const MobileSidebar = ({ navItems = [], accentColor = "blue" }) => {
       <div className="fixed top-0 left-0 h-screen w-72 bg-white z-50 flex flex-col lg:hidden shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-5 border-b border-gray-100 shrink-0">
-          <div 
+          <div
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => {
-              closeMobileSidebar();
-              navigate(ROUTES.HOME);
-            }}
+            onClick={() => { closeMobileSidebar(); navigate(ROUTES.HOME); }}
           >
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-white" />
             </div>
             <span className="text-base font-bold text-gray-900">
-              Learn<span className="text-blue-600">Hub</span>
+              Defura<span className="text-blue-600">LMS</span>
             </span>
           </div>
           <button
@@ -70,8 +72,19 @@ const MobileSidebar = ({ navItems = [], accentColor = "blue" }) => {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
-          {navItems.map((item) => {
+        <nav className="flex-1 overflow-y-auto scrollbar-hide py-4 px-3 flex flex-col gap-0.5">
+          {navItems.map((item, idx) => {
+            /* Section divider */
+            if (item.type === "section") {
+              return (
+                <div key={`section-${idx}`} className="mt-4 mb-1 px-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 select-none">
+                    {item.label}
+                  </p>
+                </div>
+              );
+            }
+
             const Icon = item.icon;
             return (
               <NavLink
@@ -86,8 +99,20 @@ const MobileSidebar = ({ navItems = [], accentColor = "blue" }) => {
                   ].join(" ")
                 }
               >
-                <Icon className="w-5 h-5 shrink-0" />
-                {item.label}
+                <span className="relative shrink-0">
+                  <Icon className="w-5 h-5 shrink-0" />
+                  {Number(item.badge) > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                      {Number(item.badge) > 99 ? "99+" : item.badge}
+                    </span>
+                  )}
+                </span>
+                <span className="flex-1">{item.label}</span>
+                {Number(item.badge) > 0 && (
+                  <span className="ml-auto min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {Number(item.badge) > 99 ? "99+" : item.badge}
+                  </span>
+                )}
               </NavLink>
             );
           })}

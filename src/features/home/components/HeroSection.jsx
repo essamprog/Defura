@@ -93,7 +93,7 @@ const Hero = () => {
 
           {/* Sub-headline */}
           <p className="text-lg sm:text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto mb-10">
-            EDUManage delivers hands-on IT courses built for the real world.
+            Defura-LMS delivers hands-on IT courses built for the real world.
             From cloud architecture to full-stack development — accelerate your
             career with expert-led learning.
           </p>

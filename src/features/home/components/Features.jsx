@@ -159,7 +159,7 @@ const Features = () => {
           <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-full px-4 py-1.5 mb-4">
             <Zap className="w-3.5 h-3.5 text-indigo-600" />
             <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
-              Why EDUManage
+              Why Defura-LMS
             </span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 leading-tight">
@@ -169,7 +169,7 @@ const Features = () => {
             </span>
           </h2>
           <p className="text-gray-500 text-base leading-relaxed">
-            Built specifically for IT professionals, EDUManage combines
+            Built specifically for IT professionals, Defura-LMS combines
             industry-relevant content with the tools to help you learn faster
             and smarter.
           </p>

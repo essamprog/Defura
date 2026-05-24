@@ -89,7 +89,7 @@ const LoginPage = () => {
           Welcome back
         </h1>
         <p className="text-sm text-gray-500">
-          Sign in to your EDUManage account to continue.
+          Sign in to your Defura-LMS account to continue.
         </p>
       </div>
 

@@ -3,8 +3,14 @@ import { ChevronRight, BookOpen, LogOut } from "lucide-react";
 import { ROUTES } from "../../constants";
 import { useAuthStore, useUIStore } from "../../store";
 import Avatar from "../ui/Avatar";
-import Button from "../ui/Button";
 
+/**
+ * Sidebar — supports two navItem shapes:
+ *
+ * 1. Section label  : { type: "section", label: "Student Mode" }
+ * 2. Nav link       : { label, icon: LucideIcon, path, badge? }
+ *    badge: number | string — shown as a red dot/pill on the icon
+ */
 const Sidebar = ({ navItems = [], accentColor = "blue" }) => {
   const { sidebarOpen, toggleSidebar } = useUIStore();
   const { user, logout } = useAuthStore();
@@ -28,7 +34,7 @@ const Sidebar = ({ navItems = [], accentColor = "blue" }) => {
         sidebarOpen ? "w-64" : "w-20",
       ].join(" ")}
     >
-      {/* ── Logo Area ──────────────────────────────────────────── */}
+      {/* ── Logo ─────────────────────────────────────────────────── */}
       <div
         onClick={() => navigate(ROUTES.HOME)}
         className={[
@@ -41,14 +47,29 @@ const Sidebar = ({ navItems = [], accentColor = "blue" }) => {
         </div>
         {sidebarOpen && (
           <span className="text-base font-bold text-gray-900 truncate">
-            Learn<span className="text-blue-600">Hub</span>
+            Defura<span className="text-blue-600">-LMS</span>
           </span>
         )}
       </div>
 
-      {/* ── Nav Items ──────────────────────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
-        {navItems.map((item) => {
+      {/* ── Nav Items ────────────────────────────────────────────── */}
+      <nav className="flex-1 overflow-y-auto scrollbar-hide py-4 px-3 flex flex-col gap-0.5">
+        {navItems.map((item, idx) => {
+          /* ── Section divider ── */
+          if (item.type === "section") {
+            return (
+              <div key={`section-${idx}`} className={["mt-4 mb-1", sidebarOpen ? "px-3" : "flex justify-center"].join(" ")}>
+                {sidebarOpen ? (
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 select-none">
+                    {item.label}
+                  </p>
+                ) : (
+                  <div className="w-5 h-px bg-gray-200" />
+                )}
+              </div>
+            );
+          }
+
           const Icon = item.icon;
           return (
             <NavLink
@@ -61,29 +82,46 @@ const Sidebar = ({ navItems = [], accentColor = "blue" }) => {
                   "flex items-center rounded-xl transition-all duration-150 group relative",
                   sidebarOpen ? "gap-3 px-3 py-2.5" : "justify-center p-3",
                   isActive
-                    ? `${accent.bg} ${accent.text}`
+                    ? `${accent.bg} ${accent.text} font-semibold`
                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-700",
                 ].join(" ")
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon
-                    className={[
-                      "w-5 h-5 shrink-0 transition-colors",
-                      isActive ? accent.icon : "text-current",
-                    ].join(" ")}
-                  />
+                  {/* Icon + optional badge */}
+                  <span className="relative shrink-0">
+                    <Icon
+                      className={[
+                        "w-5 h-5 transition-colors",
+                        isActive ? accent.icon : "text-current",
+                      ].join(" ")}
+                    />
+                    {Number(item.badge) > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                        {Number(item.badge) > 99 ? "99+" : item.badge}
+                      </span>
+                    )}
+                  </span>
+
                   {sidebarOpen && (
-                    <span className="text-sm font-medium truncate">
+                    <span className="text-sm font-medium truncate flex-1">
                       {item.label}
+                    </span>
+                  )}
+
+                  {/* Badge pill (expanded sidebar only) */}
+                  {sidebarOpen && Number(item.badge) > 0 && (
+                    <span className="ml-auto min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {Number(item.badge) > 99 ? "99+" : item.badge}
                     </span>
                   )}
 
                   {/* Tooltip when collapsed */}
                   {!sidebarOpen && (
-                    <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    <span className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                       {item.label}
+                      {item.badge && Number(item.badge) > 0 ? ` (${item.badge})` : ""}
                     </span>
                   )}
                 </>
@@ -93,7 +131,7 @@ const Sidebar = ({ navItems = [], accentColor = "blue" }) => {
         })}
       </nav>
 
-      {/* ── User Footer ────────────────────────────────────────── */}
+      {/* ── User Footer ──────────────────────────────────────────── */}
       <div className="shrink-0 border-t border-gray-100 p-3">
         {sidebarOpen ? (
           <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-50 transition-colors">
@@ -124,7 +162,7 @@ const Sidebar = ({ navItems = [], accentColor = "blue" }) => {
         )}
       </div>
 
-      {/* ── Toggle Button ──────────────────────────────────────── */}
+      {/* ── Toggle Button ────────────────────────────────────────── */}
       <button
         onClick={toggleSidebar}
         className="absolute -right-3 top-20 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow focus:outline-none"

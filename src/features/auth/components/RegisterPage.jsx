@@ -114,7 +114,7 @@ const RegisterPage = () => {
           Create your account
         </h1>
         <p className="text-sm text-gray-500">
-          Join EDUManage and start learning today.
+          Join Defura-LMS and start learning today.
         </p>
       </div>
 

@@ -4,6 +4,16 @@ import { persist } from "zustand/middleware";
 import api from "@/services/api";
 import { ENDPOINTS } from "@/services/endpoints";
 
+/**
+ * Backend returns `_id` for the user ID. Add `id` as an alias so that
+ * any code using user?.id (e.g. CheckoutPage, LearningPage) works correctly.
+ */
+const normalizeUser = (user) => {
+  if (!user) return null;
+  const id = user._id ?? user.id ?? null;
+  return { ...user, _id: id, id };
+};
+
 const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -12,10 +22,15 @@ const useAuthStore = create(
       accessToken:     null,
       refreshToken:    null,
       isAuthenticated: false,
+      isHydrated:      false,   // becomes true once persist rehydration is done
       isLoading:       false,
       error:           null,
+      enrolledCourseIds: [], // array of course IDs the student is enrolled in
 
       // ── Actions ──────────────────────────────────────────────────────────
+
+      // Internal: called by onRehydrateStorage to avoid circular reference
+      _setHydrated: () => set({ isHydrated: true }),
 
       login: async (credentials) => {
         set({ isLoading: true, error: null });
@@ -32,10 +47,11 @@ const useAuthStore = create(
           localStorage.setItem("refreshToken", refreshToken);
 
           set({
-            user,
+            user: normalizeUser(user),
             accessToken,
             refreshToken,
             isAuthenticated: true,
+            isHydrated:      true,
             isLoading:       false,
             error:           null,
           });
@@ -45,6 +61,9 @@ const useAuthStore = create(
             const { default: useCartStore } = await import("./cartSlice");
             useCartStore.getState().fetchCart();
           } catch { /* non-critical */ }
+
+          // Fetch enrolled course IDs
+          get().fetchEnrollments();
 
           return { success: true, user };
         } catch (err) {
@@ -69,13 +88,17 @@ const useAuthStore = create(
           localStorage.setItem("refreshToken", refreshToken);
 
           set({
-            user,
+            user: normalizeUser(user),
             accessToken,
             refreshToken,
             isAuthenticated: true,
+            isHydrated:      true,
             isLoading:       false,
             error:           null,
           });
+
+          // Fetch enrolled course IDs
+          get().fetchEnrollments();
 
           return { success: true, user };
         } catch (err) {
@@ -96,11 +119,13 @@ const useAuthStore = create(
         } finally {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
+          localStorage.removeItem("auth-storage");
           set({
             user:            null,
             accessToken:     null,
             refreshToken:    null,
             isAuthenticated: false,
+            enrolledCourseIds: [],
             error:           null,
           });
         }
@@ -109,10 +134,24 @@ const useAuthStore = create(
       fetchMe: async () => {
         try {
           const { data: res } = await api.get(ENDPOINTS.AUTH.ME);
-          set({ user: res.data.user });
+          set({ user: normalizeUser(res.data.user) });
         } catch {
           // Token is invalid — force logout
           get().logout();
+        }
+      },
+
+      fetchEnrollments: async () => {
+        if (!get().isAuthenticated) return;
+        try {
+          const { data: res } = await api.get(ENDPOINTS.STUDENT.ENROLLED, {
+            params: { per_page: 100 }
+          });
+          const courses = res.data ?? [];
+          const enrolledCourseIds = courses.map((c) => c._id ?? c.id);
+          set({ enrolledCourseIds });
+        } catch {
+          // Silent fallback
         }
       },
 
@@ -133,7 +172,9 @@ const useAuthStore = create(
         isAuthenticated: state.isAuthenticated,
       }),
       // After rehydration (page refresh), sync tokens to standalone localStorage keys
-      // so api.js interceptor can read them directly
+      // so api.js interceptor can read them directly, and mark hydration as done.
+      // We call state._setHydrated() instead of useAuthStore.setState() to avoid
+      // a circular reference (useAuthStore is not assigned yet when persist runs).
       onRehydrateStorage: () => (state) => {
         if (state?.accessToken) {
           localStorage.setItem("accessToken",  state.accessToken);
@@ -141,6 +182,12 @@ const useAuthStore = create(
         if (state?.refreshToken) {
           localStorage.setItem("refreshToken", state.refreshToken);
         }
+        // Normalize user so both id and _id are always present (handles old sessions)
+        if (state?.user) {
+          state.user = normalizeUser(state.user);
+        }
+        // Safe way to mark hydration complete
+        state?._setHydrated?.();
       },
     }
   )

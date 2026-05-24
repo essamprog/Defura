@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Trash2, Tag, ShoppingBag, ArrowRight, Lock, Clock, Users } from "lucide-react";
 import { Button, Input } from "@/components/ui";
@@ -9,8 +9,17 @@ import { formatDuration, resolveMediaUrl } from "@/utils";
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { items, removeItem, total, subtotal, discount, applyCoupon, removeCoupon, coupon } = useCartStore();
+  const { items, removeItem, getSubtotal, getTotal, discount, applyCoupon, removeCoupon, coupon, fetchCart, isLoading } = useCartStore();
   const { isAuthenticated } = useAuthStore();
+
+  // Derived — recalculate on every render so they stay in sync with items/discount
+  const subtotal = getSubtotal();
+  const total    = getTotal();
+
+  // Sync with the server whenever the cart page is opened directly
+  useEffect(() => {
+    if (isAuthenticated) fetchCart();
+  }, [isAuthenticated]);
 
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -89,8 +98,8 @@ const CartPage = () => {
                   </Link>
                   <p className="text-xs text-gray-400 mb-2">By {course.instructor?.name}</p>
                   <div className="flex items-center gap-3 text-xs text-gray-400">
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDuration(course.duration)}</span>
-                    <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {course.students?.toLocaleString()}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {course.duration > 0 ? formatDuration(course.duration) : "—"}</span>
+                    <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {Number(course.students) > 0 ? Number(course.students).toLocaleString() : "—"}</span>
                     <span className="px-2 py-0.5 bg-gray-100 rounded-full">{course.level}</span>
                   </div>
                 </div>

@@ -119,7 +119,7 @@ const InstructorStudentsPage = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100">
-                {["STUDENT NAME","COURSE NAME","ENROLLMENT DATE","PROGRESS","STATUS","ACTIONS"].map(h => (
+                {["STUDENT NAME","COURSE NAME","ENROLLMENT DATE","PROGRESS","PRICE PAID","ACTIONS"].map(h => (
                   <th
                     key={h}
                     className="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wide"
@@ -138,7 +138,6 @@ const InstructorStudentsPage = () => {
                 </tr>
               ) : (
                 students.map((student, idx) => {
-                  const ss            = STATUS_STYLES[student.status] ?? STATUS_STYLES.active;
                   const progressColor = PROGRESS_COLORS[student.status] ?? "#7C3AED";
                   // Unique key based on enrollment since student can be in multiple courses
                   const rowKey = student.enrollment_id ?? idx;
@@ -194,20 +193,18 @@ const InstructorStudentsPage = () => {
                         </div>
                       </td>
 
-                      {/* Status */}
+                      {/* Price Paid */}
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{ background: ss.dot }}
-                          />
-                          <span
-                            className="text-xs font-semibold px-3 py-1 rounded-full"
-                            style={{ background: ss.bg, color: ss.color }}
-                          >
-                            {ss.label}
-                          </span>
-                        </div>
+                        <span
+                          className="text-xs font-bold px-3 py-1.5 rounded-xl border flex items-center justify-center w-fit gap-1 shadow-sm shrink-0"
+                          style={{
+                            background: student.pricePaid > 0 ? "#ECFDF5" : "#F3F4F6",
+                            color: student.pricePaid > 0 ? "#059669" : "#4B5563",
+                            borderColor: student.pricePaid > 0 ? "#A7F3D0" : "#E5E7EB"
+                          }}
+                        >
+                          {student.pricePaid > 0 ? `$${Number(student.pricePaid).toFixed(2)}` : "Free"}
+                        </span>
                       </td>
 
                       {/* Actions */}

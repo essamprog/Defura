@@ -63,10 +63,12 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem("refreshToken");
-        const { data } = await axios.post(
-          `${api.defaults.baseURL}/auth/refresh.php`,
-          { refreshToken }
-        );
+        // Build the refresh URL — works with both relative (Vite proxy) and absolute base URLs
+        const base = api.defaults.baseURL ?? "";
+        const refreshUrl = base.startsWith("http")
+          ? `${base}/auth/refresh.php`
+          : `http://localhost${base}/auth/refresh.php`;
+        const { data } = await axios.post(refreshUrl, { refreshToken });
 
         const newToken = data.data.accessToken;
         const newRefreshToken = data.data.refreshToken;
@@ -89,7 +91,17 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        
+        // Prevent infinite page reload loops if the user is already on an auth page
+        const currentPath = window.location.pathname.toLowerCase();
+        const isAuthPage = currentPath.endsWith("/login") || 
+                           currentPath.endsWith("/register") || 
+                           currentPath.endsWith("/forgot-password") || 
+                           currentPath.endsWith("/reset-password");
+        if (!isAuthPage) {
+          window.location.href = "/login";
+        }
+        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

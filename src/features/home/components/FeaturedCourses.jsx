@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Star, Clock, Users, ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants";
+import { useAuthStore } from "@/store";
 import { resolveMediaUrl } from "@/utils";
 import coursesService from "../../courses/services/coursesService";
 
@@ -35,6 +36,10 @@ const COURSE_PLACEHOLDER =
 // ─── Course Card ──────────────────────────────────────────────────────────────
 const CourseCard = ({ course, visible, index }) => {
   const navigate = useNavigate();
+  const { enrolledCourseIds, isAuthenticated } = useAuthStore();
+
+  const courseId = course._id ?? course.id;
+  const isEnrolled = isAuthenticated && enrolledCourseIds.some(id => Number(id) === Number(courseId));
 
   const thumbnailRaw = course.thumbnail ?? course.thumbnail_url ?? course.image;
   const thumbnail = resolveMediaUrl(thumbnailRaw);
@@ -51,7 +56,7 @@ const CourseCard = ({ course, visible, index }) => {
 
   return (
     <div
-      onClick={() => navigate(ROUTES.courseDetail(course._id ?? course.id))}
+      onClick={() => navigate(ROUTES.courseDetail(courseId))}
       className={[
         "group bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer",
         "hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300",
@@ -119,7 +124,7 @@ const CourseCard = ({ course, visible, index }) => {
         {/* Instructor */}
         {instructorName && (
           <div className="flex items-center gap-2 mb-3">
-            <div className={`w-7 h-7 rounded-full ${avatarColor(instructorName)} flex items-center justify-center text-[11px] font-bold text-white shrink-0 overflow-hidden`}>
+            <div className={`w-9 h-9 rounded-full ${avatarColor(instructorName)} flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden border border-gray-100`}>
               {instructorAvatar ? (
                 <img
                   src={instructorAvatar}
@@ -188,9 +193,15 @@ const CourseCard = ({ course, visible, index }) => {
               <span className="text-sm text-gray-400 line-through">${course.originalPrice}</span>
             )}
           </div>
-          <span className="text-sm font-medium text-blue-600 group-hover:text-blue-700 flex items-center gap-0.5 transition-colors">
-            Enroll <ArrowRight className="w-3 h-3" />
-          </span>
+          {isEnrolled ? (
+            <span className="text-sm font-semibold text-emerald-600 group-hover:text-emerald-700 flex items-center gap-0.5 transition-colors">
+              Start <ArrowRight className="w-3 h-3" />
+            </span>
+          ) : (
+            <span className="text-sm font-medium text-blue-600 group-hover:text-blue-700 flex items-center gap-0.5 transition-colors">
+              Enroll <ArrowRight className="w-3 h-3" />
+            </span>
+          )}
         </div>
       </div>
     </div>

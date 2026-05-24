@@ -20,24 +20,43 @@ import Button from "../ui/Button";
 import Dropdown from "../ui/Dropdown";
 import { formatRelativeTime } from "../../utils";
 
-// ── Notification dot color per type ──────────────────────────────────────────
+// ── Notification dot color per type ────────────────────────────────────────────
 const typeStyle = {
-  course_update: { dot: "bg-blue-500"    },
-  certificate:   { dot: "bg-amber-400"   },
-  enrollment:    { dot: "bg-emerald-500" },
-  payment:       { dot: "bg-violet-500"  },
-  default:       { dot: "bg-gray-400"    },
+  course: { dot: "bg-blue-500" },
+  course_update: { dot: "bg-blue-500" },
+  course_pending: { dot: "bg-orange-500" },  // ⭐ pending review
+  certificate: { dot: "bg-amber-400" },
+  cert: { dot: "bg-amber-400" },
+  enrollment: { dot: "bg-emerald-500" },
+  payment: { dot: "bg-violet-500" },
+  purchase_success: { dot: "bg-emerald-500" },
+  default: { dot: "bg-gray-400" },
 };
 
-// ── Notification Bell + Dropdown ──────────────────────────────────────────────
+// ── Notification Bell + Dropdown ──────────────────────────────────────────
 const NotificationBell = () => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } =
     useNotificationsStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Fetch on first open
+  // Notifications page route depends on role
+  const notifRoute = user?.role === 'admin'
+    ? ROUTES.ADMIN_NOTIFICATIONS
+    : user?.role === 'instructor'
+      ? ROUTES.INSTRUCTOR_NOTIFICATIONS
+      : ROUTES.NOTIFICATIONS;
+
+  // Fetch on mount and poll every 60s to keep badge count fresh
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Also refresh immediately when dropdown is opened
   useEffect(() => {
     if (open) fetchNotifications();
   }, [open]);
@@ -107,20 +126,35 @@ const NotificationBell = () => {
             ) : (
               preview.map((n) => {
                 const style = typeStyle[n.type] ?? typeStyle.default;
+                // Normalize text across different field names the API may return
+                const text = n.body ?? n.message ?? n.title ?? "";
+                // Normalize time across different field names
+                const time = n.createdAt ?? n.created_at ?? n.time;
                 return (
                   <button
                     key={n._id}
-                    onClick={() => { markAsRead(n._id); setOpen(false); }}
-                    className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${!n.isRead ? "bg-blue-50/40" : ""}`}
+                    onClick={() => {
+                      markAsRead(n._id);
+                      setOpen(false);
+                      if (n.link) navigate(n.link.replace(/^\/admin/, '/admin').replace(/^\/instructor/, '/instructor'));
+                    }}
+                    className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${!n.isRead ? "bg-blue-50/40" : ""
+                      }`}
                   >
-                    <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${style.dot} ${n.isRead ? "opacity-30" : ""}`} />
+                    <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${style.dot} ${n.isRead ? "opacity-30" : ""
+                      }`} />
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs leading-snug line-clamp-2 ${n.isRead ? "text-gray-500" : "text-gray-800 font-medium"}`}>
-                        {n.text ?? n.message ?? n.title}
+                      <p className={`text-xs leading-snug mb-0.5 font-semibold ${n.isRead ? "text-gray-400" : "text-gray-800"
+                        }`}>
+                        {n.title}
                       </p>
-                      {n.time && (
+                      <p className={`text-xs leading-snug line-clamp-2 ${n.isRead ? "text-gray-400" : "text-gray-600"
+                        }`}>
+                        {text}
+                      </p>
+                      {time && (
                         <p className="text-[10px] text-gray-400 mt-0.5">
-                          {formatRelativeTime(n.time)}
+                          {formatRelativeTime(time)}
                         </p>
                       )}
                     </div>
@@ -133,7 +167,7 @@ const NotificationBell = () => {
           {/* Footer */}
           <div className="border-t border-gray-100 px-4 py-2.5">
             <button
-              onClick={() => { setOpen(false); navigate(ROUTES.NOTIFICATIONS); }}
+              onClick={() => { setOpen(false); navigate(notifRoute); }}
               className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors py-1"
             >
               View all notifications <ArrowRight className="w-3.5 h-3.5" />
@@ -147,14 +181,15 @@ const NotificationBell = () => {
 
 // ── Nav links ─────────────────────────────────────────────────────────────────
 const navLinks = [
-  { label: "Home",    path: ROUTES.HOME    },
+  { label: "Home", path: ROUTES.HOME },
   { label: "Courses", path: ROUTES.COURSES },
+  { label: "Instructors", path: ROUTES.INSTRUCTORS },
 ];
 
 // ── Main Navbar ───────────────────────────────────────────────────────────────
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled]     = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, user, logout } = useAuthStore();
   const { items } = useCartStore();
   const navigate = useNavigate();
@@ -171,7 +206,7 @@ const Navbar = () => {
   };
 
   const getDashboardRoute = () => {
-    if (user?.role === "admin")      return ROUTES.ADMIN_DASHBOARD;
+    if (user?.role === "admin") return ROUTES.ADMIN_DASHBOARD;
     if (user?.role === "instructor") return ROUTES.INSTRUCTOR_DASHBOARD;
     return ROUTES.DASHBOARD;
   };
@@ -194,7 +229,7 @@ const Navbar = () => {
               <BookOpen className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold text-gray-900">
-              DEfura<span className="text-blue-600">-LMS</span>
+              Defura<span className="text-blue-600">LMS</span>
             </span>
           </Link>
 

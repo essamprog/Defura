@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, FileText, DollarSign, Upload, CheckCircle, ChevronRight, Plus, Trash2, Video } from "lucide-react";
 import { Button, Input } from "@/components/ui";
@@ -14,11 +14,11 @@ const STEPS = [
   { id: 5, label: "Publish",     icon: CheckCircle },
 ];
 
-const LEVELS      = ["Beginner", "Intermediate", "Advanced"];
-const CATEGORIES  = ["Cloud", "Development", "AI & ML", "DevOps", "Security", "Data", "Networking"];
+const LEVELS = ["Beginner", "Intermediate", "Advanced"];
+// Categories are loaded from the database — see useEffect in CreateCoursePage
 
 // ─── Step Components ──────────────────────────────────────────────────────────
-const BasicInfoStep = ({ data, onChange, errors }) => (
+const BasicInfoStep = ({ data, onChange, errors, categories, categoriesLoading }) => (
   <div className="space-y-5">
     <h2 className="text-base font-bold text-gray-900">Course Details</h2>
     <Input label="Course Title" placeholder="e.g. Complete AWS Solutions Architect Guide" value={data.title} onChange={e => onChange("title", e.target.value)} required hint="Be specific and clear. A good title can double enrollments." error={errors.title} />
@@ -30,9 +30,9 @@ const BasicInfoStep = ({ data, onChange, errors }) => (
     <div className="grid grid-cols-2 gap-4">
       <div>
         <label className="text-sm font-medium text-gray-700 block mb-1.5">Category <span className="text-red-500">*</span></label>
-        <select className={`w-full h-10 rounded-lg border ${errors.category ? 'border-red-500' : 'border-gray-300'} px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white`} value={data.category} onChange={e => onChange("category", e.target.value)}>
-          <option value="">Select category</option>
-          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+        <select className={`w-full h-10 rounded-lg border ${errors.category ? 'border-red-500' : 'border-gray-300'} px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white`} value={data.category_id} onChange={e => onChange("category_id", e.target.value)}>
+          <option value="">{categoriesLoading ? "Loading categories..." : "Select category"}</option>
+          {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
         </select>
         {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
       </div>
@@ -213,33 +213,6 @@ const MediaStep = ({ data, onChange, errors }) => (
         </div>
       )}
     </div>
-
-    <div>
-      <label className="text-sm font-medium text-gray-700 block mb-2">Promotional Video <span className="text-red-500">*</span></label>
-      <div className={`border-2 border-dashed ${errors.promoVideo ? 'border-red-400' : 'border-gray-200'} rounded-xl p-6 text-center hover:border-blue-300 transition-colors cursor-pointer`}>
-        {data.promoVideo ? (
-          <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm flex items-center justify-center gap-2">
-            <Video className="w-5 h-5" />
-            <span className="truncate max-w-xs">{data.promoVideo.name}</span>
-          </div>
-        ) : (
-          <>
-            <Video className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm font-medium text-gray-700 mb-1">Upload promo video</p>
-            <p className="text-xs text-gray-400">MP4, WebM up to 50MB</p>
-            <input type="file" accept="video/*" className="hidden" id="promo" onChange={e => onChange("promoVideo", e.target.files[0])} />
-            <label htmlFor="promo" className="mt-3 inline-block px-4 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg cursor-pointer hover:bg-gray-200 transition-colors">Choose Video</label>
-          </>
-        )}
-      </div>
-      {errors.promoVideo && <p className="text-red-500 text-xs mt-1">{errors.promoVideo}</p>}
-      {data.promoVideo && (
-        <div className="mt-2 text-right">
-            <label htmlFor="promo_change" className="text-xs text-blue-600 cursor-pointer hover:underline">Change Promo Video</label>
-            <input type="file" accept="video/*" className="hidden" id="promo_change" onChange={e => onChange("promoVideo", e.target.files[0])} />
-        </div>
-      )}
-    </div>
   </div>
 );
 
@@ -261,7 +234,9 @@ const PricingStep = ({ data, onChange, errors }) => (
   </div>
 );
 
-const PublishStep = ({ data }) => (
+const PublishStep = ({ data, categories }) => {
+  const categoryName = categories.find(c => String(c._id) === String(data.category_id))?.name || "—";
+  return (
   <div className="space-y-5 text-center">
     <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto">
       <CheckCircle className="w-10 h-10 text-green-500" />
@@ -272,9 +247,9 @@ const PublishStep = ({ data }) => (
     </div>
     <div className="bg-gray-50 rounded-xl p-4 text-left space-y-2">
       {[
-        { label: "Title",    value: data.title    || "—" },
-        { label: "Category", value: data.category || "—" },
-        { label: "Level",    value: data.level    || "—" },
+        { label: "Title",    value: data.title || "—" },
+        { label: "Category", value: categoryName },
+        { label: "Level",    value: data.level  || "—" },
         { label: "Price",    value: data.price ? `$${data.price}` : "Free" },
         { label: "Sections", value: `${data.sections.length} Sections` },
       ].map(item => (
@@ -285,17 +260,35 @@ const PublishStep = ({ data }) => (
       ))}
     </div>
   </div>
-);
+  );
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const CreateCoursePage = () => {
   const navigate = useNavigate();
   const [step,    setStep]    = useState(1);
   const [saving,  setSaving]  = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [errors,  setErrors]  = useState({});
-  const [data,    setData]    = useState({
-    title:"", description:"", category:"", level:"", outcomes:"",
-    thumbnail:null, promoVideo:null, price:"", originalPrice:"",
+
+  // ── Real categories from DB ────────────────────────────────────────────────
+  const [categories,        setCategories]        = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    instructorService.getCategories()
+      .then(({ data: res }) => {
+        if (!cancelled) setCategories(res.data?.categories ?? []);
+      })
+      .catch(err => console.error('Failed to load categories:', err))
+      .finally(() => { if (!cancelled) setCategoriesLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const [data, setData] = useState({
+    title:"", description:"", category_id:"", level:"", outcomes:"",
+    thumbnail:null, price:"", originalPrice:"",
     sections: [],
   });
 
@@ -310,11 +303,11 @@ const CreateCoursePage = () => {
     let isValid = true;
 
     if (currentStep === 1) {
-      if (!data.title.trim()) newErrors.title = "Course title is required.";
+      if (!data.title.trim())       newErrors.title       = "Course title is required.";
       if (!data.description.trim()) newErrors.description = "Short description is required.";
-      if (!data.category) newErrors.category = "Category is required.";
-      if (!data.level) newErrors.level = "Level is required.";
-      if (!data.outcomes.trim()) newErrors.outcomes = "Learning outcomes are required.";
+      if (!data.category_id)        newErrors.category    = "Category is required.";
+      if (!data.level)              newErrors.level       = "Level is required.";
+      if (!data.outcomes.trim())    newErrors.outcomes    = "Learning outcomes are required.";
     }
 
     if (currentStep === 2) {
@@ -349,7 +342,6 @@ const CreateCoursePage = () => {
 
     if (currentStep === 3) {
       if (!data.thumbnail) newErrors.thumbnail = "Course thumbnail is required.";
-      if (!data.promoVideo) newErrors.promoVideo = "Promotional video is required.";
     }
 
     if (currentStep === 4) {
@@ -372,21 +364,20 @@ const CreateCoursePage = () => {
 
   const handleSubmit = async () => {
     setSaving(true);
+    setUploadProgress(0);
     try {
-      const catIndex = CATEGORIES.indexOf(data.category);
-      
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("description", data.description);
-      formData.append("category_id", catIndex >= 0 ? catIndex + 1 : 1);
+      // Use the real DB category_id selected by the instructor
+      formData.append("category_id", data.category_id);
       formData.append("level", data.level.toLowerCase());
       formData.append("price", Number(data.price));
       if (data.originalPrice) formData.append("original_price", Number(data.originalPrice));
-      formData.append("subtitle", data.outcomes); // Using subtitle for outcomes
+      formData.append("subtitle", data.outcomes);
 
       // Append files
       if (data.thumbnail) formData.append("thumbnail", data.thumbnail);
-      if (data.promoVideo) formData.append("promoVideo", data.promoVideo);
 
       // Append structured curriculum data
       const sectionsPayload = data.sections.map(s => ({
@@ -408,29 +399,38 @@ const CreateCoursePage = () => {
         });
       });
 
-      // Submit via direct API call using FormData to the new endpoint
+      // Submit — no timeout for large video uploads, track progress via onUploadProgress
       await api.post('/instructor/create_course.php', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 0, // disable timeout for video uploads
+        onUploadProgress: (evt) => {
+          if (evt.total) {
+            const pct = Math.round((evt.loaded / evt.total) * 100);
+            setUploadProgress(pct);
+          }
+        },
       });
-      
+
       navigate(ROUTES.INSTRUCTOR_COURSES);
     } catch (err) {
       console.error("Failed to create course:", err);
-      alert(err.response?.data?.message || "Failed to upload course. Check file sizes and server settings.");
+      const msg = err.response?.data?.message
+        ?? (err.code === 'ECONNABORTED' ? 'Upload timed out. Please try with smaller files or check your connection.' : null)
+        ?? "Failed to upload course. Check file sizes and server settings.";
+      alert(msg);
     } finally {
       setSaving(false);
+      setUploadProgress(0);
     }
   };
 
   const stepContent = () => {
     switch (step) {
-      case 1: return <BasicInfoStep  data={data} onChange={updateField} errors={errors} />;
+      case 1: return <BasicInfoStep  data={data} onChange={updateField} errors={errors} categories={categories} categoriesLoading={categoriesLoading} />;
       case 2: return <CurriculumStep data={data} onChange={updateField} errors={errors} />;
       case 3: return <MediaStep      data={data} onChange={updateField} errors={errors} />;
       case 4: return <PricingStep    data={data} onChange={updateField} errors={errors} />;
-      case 5: return <PublishStep    data={data} />;
+      case 5: return <PublishStep    data={data} categories={categories} />;
       default: return null;
     }
   };
@@ -469,9 +469,65 @@ const CreateCoursePage = () => {
         {stepContent()}
       </div>
 
+      {/* Upload progress overlay — shown while saving */}
+      {saving && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm text-center space-y-5">
+            {/* Animated icon */}
+            <div className="relative w-20 h-20 mx-auto">
+              <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
+              <div
+                className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 animate-spin"
+                style={{ animationDuration: uploadProgress >= 100 ? '0.3s' : '1s' }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                {uploadProgress >= 100
+                  ? <CheckCircle className="w-8 h-8 text-emerald-500" />
+                  : <Upload className="w-7 h-7 text-blue-500" />
+                }
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">
+                {uploadProgress >= 100 ? 'Processing on server...' : 'Uploading your course'}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {uploadProgress >= 100
+                  ? 'Almost done! The server is saving your content.'
+                  : 'Please keep this tab open while videos are uploading.'}
+              </p>
+            </div>
+
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-medium">
+                <span className="text-gray-500">Upload progress</span>
+                <span className="text-blue-600">{uploadProgress}%</span>
+              </div>
+              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300 ease-out"
+                  style={{
+                    width: `${uploadProgress}%`,
+                    background: uploadProgress >= 100
+                      ? 'linear-gradient(90deg, #10b981, #059669)'
+                      : 'linear-gradient(90deg, #3b82f6, #6366f1)',
+                  }}
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400">
+              🔒 Secure upload — do not close or refresh this page
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => step > 1 ? setStep(s => s - 1) : navigate(ROUTES.INSTRUCTOR_COURSES)}>
+        <Button variant="outline" onClick={() => step > 1 ? setStep(s => s - 1) : navigate(ROUTES.INSTRUCTOR_COURSES)} disabled={saving}>
           {step === 1 ? "Cancel" : "Back"}
         </Button>
         {step < 5 ? (
@@ -479,7 +535,7 @@ const CreateCoursePage = () => {
             Continue
           </Button>
         ) : (
-          <Button isLoading={saving} loadingText="Publishing..." onClick={handleSubmit}>
+          <Button isLoading={saving} loadingText="Uploading..." onClick={handleSubmit}>
             Submit for Review
           </Button>
         )}

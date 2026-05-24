@@ -102,6 +102,28 @@ export const buildQueryString = (params) => {
 // ─── Media URL Helpers ────────────────────────────────────────────────────────
 const DEFAULT_API_BASE_URL = "http://localhost/LMS-React/backend/api";
 
+export const COURSE_PLACEHOLDER =
+  "data:image/svg+xml;charset=utf-8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#eff6ff"/>
+          <stop offset="1" stop-color="#e0e7ff"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="450" fill="url(#g)"/>
+      <g fill="#93c5fd">
+        <path d="M260 152c0-18 14-32 32-32h240c18 0 32 14 32 32v176c0 18-14 32-32 32H292c-18 0-32-14-32-32V152zm40 24h200a16 16 0 0 1 16 16v136a16 16 0 0 1-16 16H300a16 16 0 0 1-16-16V192a16 16 0 0 1 16-16z"/>
+        <path d="M320 220h160v24H320zM320 268h120v24H320z"/>
+      </g>
+    </svg>
+  `);
+
+/** True when a lesson is marked as a free preview (handles string "1" from API). */
+export const isFreePreviewLesson = (lesson) =>
+  lesson != null && Number(lesson?.is_free_preview ?? lesson?.isFreePreview) === 1;
+
 export const getSiteBaseUrl = () => {
   const apiBase = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
   try {

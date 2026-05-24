@@ -11,8 +11,16 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    // Backend runs on XAMPP/Apache — no proxy needed.
-    // All API calls use the full URL from VITE_API_BASE_URL in .env
+    proxy: {
+      // Forward all /LMS-React/backend/api/* requests to XAMPP Apache.
+      // This makes the requests appear same-origin, completely eliminating
+      // CORS preflight issues during development.
+      "/LMS-React/backend/api": {
+        target: "http://localhost",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   build: {
     outDir: "dist",

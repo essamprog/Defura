@@ -7,3 +7,4 @@ export { default as AdminSettingsPage }   from "./pages/AdminSettingsPage";
 export { default as useAdmin }            from "./hooks/useAdmin";
 export { default as adminService }        from "./services/adminService";
 export { default as AuditLogs }           from "./pages/AuditLogs"; 
+export { default as AdminInstructorsFinancialsPage } from "./pages/AdminInstructorsFinancialsPage";

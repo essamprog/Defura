@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store';
 import api from '@/services/api';
 import { ENDPOINTS } from '@/services/endpoints';
+import { VideoPlayer } from '@/components/common';
+import { resolveMediaUrl, COURSE_PLACEHOLDER, isFreePreviewLesson } from '@/utils';
 
 export default function CoursePreview() {
   const { id: courseId } = useParams();
@@ -13,12 +15,25 @@ export default function CoursePreview() {
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
   const [activeVideo, setActiveVideo] = useState(null);
+  const [activeVideoTitle, setActiveVideoTitle] = useState('');
+  const [thumbErrored, setThumbErrored] = useState(false);
 
   useEffect(() => {
     if (courseId) fetchDetails();
   }, [courseId]);
 
+  const playVideo = (url, title = '') => {
+    const resolved = resolveMediaUrl(url);
+    if (resolved) {
+      setActiveVideo(resolved);
+      setActiveVideoTitle(title);
+    }
+  };
+
   const fetchDetails = async () => {
+    setActiveVideo(null);
+    setActiveVideoTitle('');
+    setThumbErrored(false);
     try {
       const res = await api.get(ENDPOINTS.COURSES.PUBLIC_DETAIL(courseId));
       // Handle both {status, data} and direct response shapes
@@ -51,6 +66,10 @@ export default function CoursePreview() {
   );
 
   const price = typeof course.price === 'number' ? course.price : parseFloat(course.price ?? 0);
+  const thumbnailUrl = !thumbErrored
+    ? resolveMediaUrl(course?.thumbnail ?? course?.thumbnail_url)
+    : null;
+  const promoVideoUrl = resolveMediaUrl(course?.promo_video_url);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -97,31 +116,35 @@ export default function CoursePreview() {
           <div className="w-full md:w-80 bg-white text-gray-900 p-6 rounded-2xl shadow-2xl border border-gray-100 md:translate-y-8 z-20 shrink-0">
             {/* Video / thumbnail preview */}
             {activeVideo ? (
-              <video
+              <VideoPlayer
                 src={activeVideo}
-                controls
+                poster={thumbnailUrl}
+                title={activeVideoTitle}
                 autoPlay
-                className="w-full h-48 object-cover rounded-xl bg-black mb-5 shadow-inner"
+                className="mb-5 rounded-xl"
               />
             ) : (
               <div className="w-full h-48 bg-gray-100 rounded-xl mb-5 relative overflow-hidden group flex items-center justify-center shadow-inner">
-                {course.thumbnail_url
-                  ? <img
-                      src={course.thumbnail_url}
-                      className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
-                      alt="Course thumbnail"
-                    />
-                  : <span className="text-gray-400 font-medium text-sm">No Course Image</span>
-                }
-                {course.promo_video_url && (
-                  <div
-                    className="absolute inset-0 bg-gray-900/40 flex items-center justify-center cursor-pointer"
-                    onClick={() => setActiveVideo(course.promo_video_url)}
+                <img
+                  src={thumbnailUrl ?? COURSE_PLACEHOLDER}
+                  className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
+                  alt={course?.title ?? 'Course thumbnail'}
+                  onError={(e) => {
+                    if (!thumbErrored) setThumbErrored(true);
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = COURSE_PLACEHOLDER;
+                  }}
+                />
+                {promoVideoUrl && (
+                  <button
+                    type="button"
+                    className="absolute inset-0 bg-gray-900/40 flex items-center justify-center cursor-pointer border-0"
+                    onClick={() => playVideo(course?.promo_video_url, 'Promo video')}
                   >
                     <span className="bg-white/95 text-indigo-600 p-4 rounded-full shadow-xl transform group-hover:scale-110 transition-all font-bold text-sm flex items-center gap-2">
                       <span className="text-xl">▶</span> Preview
                     </span>
-                  </div>
+                  </button>
                 )}
               </div>
             )}
@@ -188,28 +211,36 @@ export default function CoursePreview() {
                           className="px-6 py-4 flex justify-between items-center hover:bg-indigo-50/50 transition-colors group"
                         >
                           <div className="flex items-center space-x-4">
-                            {lesson.is_free_preview == 1 ? (
-                              <span
-                                className="text-indigo-600 bg-indigo-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0"
-                                onClick={() => setActiveVideo(lesson.video_path)}
+                            {isFreePreviewLesson(lesson) && resolveMediaUrl(lesson?.video_path) ? (
+                              <button
+                                type="button"
+                                className="text-indigo-600 bg-indigo-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0 border-0"
+                                onClick={() => playVideo(lesson?.video_path, lesson?.title)}
                               >
                                 ▶
-                              </span>
+                              </button>
                             ) : (
                               <span className="text-gray-400 bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center shrink-0">
                                 🔒
                               </span>
                             )}
-                            <span
-                              className={`font-medium text-sm ${lesson.is_free_preview == 1 ? 'text-indigo-900 cursor-pointer hover:underline' : 'text-gray-600'}`}
-                              onClick={() => lesson.is_free_preview == 1 && setActiveVideo(lesson.video_path)}
+                            <button
+                              type="button"
+                              disabled={!(isFreePreviewLesson(lesson) && resolveMediaUrl(lesson?.video_path))}
+                              className={[
+                                'font-medium text-sm text-left border-0 bg-transparent p-0',
+                                isFreePreviewLesson(lesson) && resolveMediaUrl(lesson?.video_path)
+                                  ? 'text-indigo-900 cursor-pointer hover:underline'
+                                  : 'text-gray-600 cursor-default',
+                              ].join(' ')}
+                              onClick={() => isFreePreviewLesson(lesson) && playVideo(lesson?.video_path, lesson?.title)}
                             >
-                              {lesson.title}
-                            </span>
+                              {lesson?.title}
+                            </button>
                           </div>
 
                           <div className="flex items-center gap-3 text-xs font-semibold shrink-0">
-                            {lesson.is_free_preview == 1 && (
+                            {isFreePreviewLesson(lesson) && (
                               <span className="bg-green-100 text-green-700 px-2 py-1 rounded uppercase tracking-wider">
                                 Free
                               </span>

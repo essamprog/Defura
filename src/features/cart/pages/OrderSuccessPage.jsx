@@ -309,7 +309,7 @@ const OrderSuccessPage = () => {
             <p className="text-center text-xs text-gray-400 mt-5">
               Issues with your purchase?{" "}
               <a
-                href="mailto:support@edumanage.com"
+                href="mailto:support@defura.com"
                 className="text-violet-600 hover:underline font-medium"
               >
                 Contact Support

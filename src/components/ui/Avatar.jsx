@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getInitials } from "../../utils";
 
 const sizes = {
@@ -37,6 +37,12 @@ const Avatar = ({
   ...props
 }) => {
   const [imgError, setImgError] = useState(false);
+
+  // Reset imgError state when src changes to allow new previews/uploads to show instantly
+  useEffect(() => {
+    setImgError(false);
+  }, [src]);
+
   const shapeClass = shape === "circle" ? "rounded-full" : "rounded-xl";
   const initials = getInitials(name);
   const colorClass = getColor(name);

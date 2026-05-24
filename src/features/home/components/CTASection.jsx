@@ -81,7 +81,7 @@ const CTACard = ({ type }) => {
       {/* CTA buttons */}
       <div className="relative z-10 flex flex-col sm:flex-row gap-3">
         <button
-          onClick={() => navigate(isStudent ? ROUTES.REGISTER : ROUTES.INSTRUCTOR_DASHBOARD)}
+          onClick={() => navigate(isStudent ? ROUTES.REGISTER : ROUTES.BECOME_INSTRUCTOR)}
           className={[
             "group inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl font-semibold text-sm transition-all duration-200 hover:-translate-y-0.5",
             isStudent
@@ -94,7 +94,7 @@ const CTACard = ({ type }) => {
         </button>
 
         <button
-          onClick={() => navigate(isStudent ? ROUTES.COURSES : "/instructor-info")}
+          onClick={() => navigate(isStudent ? ROUTES.COURSES : ROUTES.INSTRUCTOR_INFO)}
           className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl font-medium text-sm text-white/80 hover:text-white border border-white/20 hover:border-white/40 hover:bg-white/5 transition-all duration-200"
         >
           {isStudent ? "Browse Courses" : "Learn More"}

@@ -3,9 +3,7 @@ import {
   Users,
   BookOpen,
   Award,
-  Globe,
   TrendingUp,
-  Clock,
 } from "lucide-react";
 
 // ─── Stats Data ───────────────────────────────────────────────────────────────
@@ -53,28 +51,6 @@ const STATS = [
     display: "18,400+",
     label: "Certificates Issued",
     description: "Recognized by top employers",
-  },
-  {
-    id: "countries",
-    icon: Globe,
-    iconColor: "text-sky-600",
-    iconBg: "bg-sky-50",
-    value: 80,
-    suffix: "+",
-    display: "80+",
-    label: "Countries",
-    description: "Truly global community",
-  },
-  {
-    id: "hours",
-    icon: Clock,
-    iconColor: "text-amber-600",
-    iconBg: "bg-amber-50",
-    value: 1200,
-    suffix: "h+",
-    display: "1,200h+",
-    label: "Of Content",
-    description: "New content added weekly",
   },
 ];
 
@@ -173,15 +149,15 @@ const Stats = () => {
             Numbers that speak for themselves
           </h2>
           <p className="text-gray-500 text-base max-w-xl mx-auto">
-            Thousands of IT professionals trust EDUManage to build real-world
+            Thousands of IT professionals trust Defura-LMS to build real-world
             skills and advance their careers.
           </p>
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STATS.map((stat, index) => (
-            <div key={stat.id} className="lg:col-span-1 col-span-1">
+            <div key={stat.id}>
               <StatCard stat={stat} triggered={triggered} index={index} />
             </div>
           ))}

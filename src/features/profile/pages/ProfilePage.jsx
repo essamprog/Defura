@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { User, Mail, Lock, Camera, Save, AlertCircle, CheckCircle, Globe } from "lucide-react";
 
 // Inline SVG brand icons (removed from lucide-react v1.x)
@@ -32,6 +32,18 @@ const ProfileTab = ({ user, onSave, isSaving = false, serverError = "" }) => {
     linkedin: user?.linkedin ?? "",
     github: user?.github ?? "",
   });
+
+  useEffect(() => {
+    setFields({
+      full_name: user?.full_name ?? user?.name ?? "",
+      email: user?.email ?? "",
+      bio: user?.bio ?? "",
+      website: user?.website ?? "",
+      linkedin: user?.linkedin ?? "",
+      github: user?.github ?? "",
+    });
+  }, [user]);
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -140,22 +152,70 @@ const ProfilePage = () => {
   const [avatarLoading, setAvatarLoading] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Local state for profile picture file and preview
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+
+  // Cleanup object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (avatarPreview) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
+
   // Unified display name: prefer full_name, fall back to name
   const displayName   = user?.full_name ?? user?.name ?? "Your Name";
-  const displayAvatar = user?.profile_picture ?? user?.avatar;
+  const displayAvatar = avatarPreview || user?.profile_picture || user?.avatar;
 
   const handleSaveProfile = async (fields) => {
     setProfileLoading(true);
     setProfileError("");
 
     try {
+      let updatedUserPayload = { ...fields };
+
+      // Upload avatar first if there is a pending local selection
+      if (avatarFile) {
+        setAvatarLoading(true);
+        try {
+          const { data: avatarData } = await profileService.uploadAvatar(avatarFile);
+          const newAvatar = avatarData.data?.avatar ?? avatarData.data?.profile_picture;
+          updatedUserPayload.profile_picture = newAvatar;
+          updatedUserPayload.avatar = newAvatar;
+          
+          // Clear local avatar state
+          setAvatarFile(null);
+          if (avatarPreview) {
+            URL.revokeObjectURL(avatarPreview);
+            setAvatarPreview(null);
+          }
+        } catch (avatarErr) {
+          console.error("Avatar upload failed:", avatarErr);
+          setProfileError(avatarErr.response?.data?.message ?? "Failed to upload avatar.");
+          setAvatarLoading(false);
+          return false;
+        }
+        setAvatarLoading(false);
+      }
+
+      // Save general profile details
       const { data } = await profileService.updateProfile({
         full_name: fields.full_name,
         email: fields.email,
         bio: fields.bio,
+        website: fields.website,
+        linkedin: fields.linkedin,
+        github: fields.github,
       });
 
-      updateUser(data.data?.user ?? data.user ?? fields);
+      const userFromApi = data.data?.user ?? data.user ?? {};
+      updateUser({
+        ...userFromApi,
+        ...updatedUserPayload,
+      });
+
       showSuccess("Profile updated successfully!");
       return true;
     } catch (err) {
@@ -186,23 +246,17 @@ const ProfilePage = () => {
     fileInputRef.current?.click();
   };
 
-  const handleAvatarUpload = async (event) => {
+  const handleAvatarUpload = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setAvatarLoading(true);
-    try {
-      const { data } = await profileService.uploadAvatar(file);
-      // avatar.php returns: { data: { avatar: "url" } }
-      const newAvatar = data.data?.avatar ?? data.data?.profile_picture;
-      updateUser({ profile_picture: newAvatar, avatar: newAvatar });
-      showSuccess("Avatar uploaded successfully!");
-    } catch (err) {
-      setProfileError(err.response?.data?.message ?? "Failed to upload avatar.");
-    } finally {
-      setAvatarLoading(false);
-      event.target.value = "";
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
     }
+
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    event.target.value = ""; // Clear file input so same file can be chosen again
   };
 
   return (

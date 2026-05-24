@@ -9,6 +9,9 @@ const profileService = {
     full_name: data.full_name ?? data.name,
     email: data.email,
     bio: data.bio,
+    website: data.website,
+    linkedin: data.linkedin,
+    github: data.github,
   }),
 
   changePassword: (data) => api.patch(ENDPOINTS.USER.CHANGE_PASSWORD, {

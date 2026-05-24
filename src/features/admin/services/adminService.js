@@ -34,7 +34,10 @@ const adminService = {
     api.get(ENDPOINTS.ADMIN.ORDERS, { params }),
 
   refundOrder: (id) =>
-    api.patch(ENDPOINTS.ADMIN.ORDER_DETAIL(id)),
+    api.patch(ENDPOINTS.ADMIN.ORDER_DETAIL(id), { action: "refund" }),
+
+  cancelRefundOrder: (id) =>
+    api.patch(ENDPOINTS.ADMIN.ORDER_DETAIL(id), { action: "cancel_refund" }),
 
   // ── Categories ───────────────────────────────────────────────────────────
   getCategories: () =>

@@ -25,16 +25,17 @@ export const ENDPOINTS = {
     // ✅ Phase 4 — Marketplace (db.php system)
     MARKETPLACE: '/student/get_marketplace.php',
     PUBLIC_DETAIL: (id) => `/student/get_course_details.php?id=${id}`,
+    QA: '/courses/qa.php',
   },
 
   // ── Student ──────────────────────────────────────────────────────────────────
   STUDENT: {
     // ✅ All now on System A (bootstrap.php + AuthMiddleware)
     DASHBOARD:        '/student/dashboard.php',           // legacy System A — keep
-    ENROLLED:         '/student/get_my_enrollments.php',  // migrated
+    ENROLLED:         '/student/enrolled.php',            // returns next_lesson_id, thumbnail_url, etc.
     PROGRESS:         '/student/update_progress.php',     // migrated
     COMPLETE_LESSON:  '/student/update_progress.php',     // migrated
-    MY_ENROLLMENTS:   '/student/get_my_enrollments.php',
+    MY_ENROLLMENTS:   '/student/enrolled.php',            // same endpoint
     UPDATE_PROGRESS:  '/student/update_progress.php',
     LESSON_VIDEO:     '/student/get_lesson_video.php',
     CHECKOUT:         '/student/checkout.php',
@@ -55,7 +56,7 @@ export const ENDPOINTS = {
     // ✅ All now on System A (bootstrap.php + AuthMiddleware)
     DASHBOARD:      '/instructor/dashboard.php',           // legacy System A — keep
     COURSES:        '/instructor/get_my_courses.php',      // migrated
-    COURSE_DETAIL:  (id) => `/instructor/get_curriculum.php?course_id=${id}`,
+    COURSE_DETAIL:  (id) => `/instructor/course_detail.php?id=${id}`,
     CREATE_COURSE:  '/instructor/create_course.php',
     UPDATE_COURSE:  (id) => `/instructor/update_course.php`,
     DELETE_COURSE:  (id) => `/instructor/delete_course.php`,
@@ -65,13 +66,14 @@ export const ENDPOINTS = {
     LESSONS:        '/instructor/save_lesson.php',         // migrated
     UPLOAD_VIDEO:   '/instructor/upload_media.php',        // migrated
     UPLOAD_IMAGE:   '/instructor/upload_media.php',        // migrated
+    CATEGORIES:     '/instructor/get_categories.php',      // ✅ real DB categories
     // Phase 1-3 Curriculum
     MY_COURSES:     '/instructor/get_my_courses.php',
     CURRICULUM:     '/instructor/get_curriculum.php',
     SAVE_SECTION:   '/instructor/save_section.php',
     SAVE_LESSON:    '/instructor/save_lesson.php',
     UPDATE_ORDER:   '/instructor/update_order.php',
-    DELETE_ITEM:    '/instructor/delete_item.php',
+    DELETE_ITEM:    '/instructor/delete_item.php',    // { id, type: "lesson"|"section"|"resource" }
     UPLOAD_MEDIA:   '/instructor/upload_media.php',
   },
 
@@ -85,10 +87,13 @@ export const ENDPOINTS = {
     APPROVE_COURSE: '/admin/approve_course.php',
     ORDERS: '/admin/orders.php',
     ORDER_DETAIL: (id) => `/admin/orders.php?id=${id}`,
+    WITHDRAWALS: '/admin/withdrawals.php',
     CATEGORIES: '/admin/categories.php',
     CATEGORY_DETAIL: (id) => `/admin/categories.php?id=${id}`,
     SETTINGS: '/admin/settings.php',
     AUDIT_LOGS: '/admin/get_audit_logs.php',
+    COURSE_PREVIEW: (id) => `/admin/course_preview.php?id=${id}`,
+    INSTRUCTORS_FINANCIALS: '/admin/instructors_financials.php',
   },
 
   // ── Notifications ────────────────────────────────────────────────────────────

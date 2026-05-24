@@ -1,10 +1,10 @@
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, Clock, Users, ArrowRight, ShoppingCart, Check } from "lucide-react";
+import { Star, Clock, Users, ArrowRight, ShoppingCart, Check, Loader2, Play } from "lucide-react";
 import { Badge } from "@/components/ui";
-import { useCartStore } from "@/store";
+import { useCartStore, useAuthStore } from "@/store";
 import { ROUTES } from "@/constants";
 import { formatDuration, resolveMediaUrl } from "@/utils";
-import { useMemo, useState } from "react";
 
 // Deterministic avatar color
 const AVATAR_COLORS = [
@@ -35,7 +35,17 @@ const COURSE_PLACEHOLDER =
 const CourseCard = ({ course, className = "" }) => {
   const navigate  = useNavigate();
   const { addItem, isInCart } = useCartStore();
-  const inCart = isInCart(course._id);
+  const { enrolledCourseIds, isAuthenticated } = useAuthStore();
+  
+  const courseId = course._id ?? course.id;
+  const isEnrolled = isAuthenticated && enrolledCourseIds.some(id => Number(id) === Number(courseId));
+
+  // Pass the full course object so isInCart can resolve any ID field (_id / id / course_id).
+  // isInCart is a pure function of get().items — every Zustand subscriber re-runs this
+  // per-card so each card has its OWN independent boolean.
+  const inCart = isInCart(course);
+
+  const [adding, setAdding] = useState(false);
   const [thumbErrored, setThumbErrored] = useState(false);
   const [avatarErrored, setAvatarErrored] = useState(false);
 
@@ -43,9 +53,17 @@ const CourseCard = ({ course, className = "" }) => {
     ? Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)
     : 0;
 
-  const handleCart = (e) => {
+  const handleCart = async (e) => {
     e.stopPropagation();
-    if (!inCart) addItem(course);
+    if (isEnrolled) {
+      navigate(ROUTES.learning(courseId, "start"));
+      return;
+    }
+    if (inCart || adding) return;   // idempotent guard
+    setAdding(true);
+    await addItem(course);          // addItem posts to API; rolls back on failure
+    setAdding(false);
+    // inCart is derived from store state, so it updates automatically on success
   };
 
   // Backend sends `thumbnail` (normalized from thumbnail_url)
@@ -64,7 +82,7 @@ const CourseCard = ({ course, className = "" }) => {
 
   return (
     <div
-      onClick={() => navigate(ROUTES.courseDetail(course._id))}
+      onClick={() => navigate(ROUTES.courseDetail(courseId))}
       className={[
         "group bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer",
         "hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col",
@@ -132,7 +150,7 @@ const CourseCard = ({ course, className = "" }) => {
         {/* Instructor */}
         {instructorName && (
           <div className="flex items-center gap-2">
-            <div className={`w-6 h-6 rounded-full ${avatarColor(instructorName)} flex items-center justify-center text-[10px] font-bold text-white shrink-0 overflow-hidden`}>
+            <div className={`w-8 h-8 rounded-full ${avatarColor(instructorName)} flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden border border-gray-100`}>
               {instructorAvatarUrl && !avatarErrored ? (
                 <img
                   src={instructorAvatarUrl}
@@ -190,16 +208,27 @@ const CourseCard = ({ course, className = "" }) => {
           </div>
           <button
             onClick={handleCart}
+            disabled={(!isEnrolled && inCart) || adding}
             className={[
               "inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all duration-150",
-              inCart
-                ? "bg-green-50 text-green-600 cursor-default"
-                : "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white",
+              isEnrolled
+                ? "bg-violet-600 text-white hover:bg-violet-700 shadow-sm"
+                : inCart
+                  ? "bg-green-50 text-green-600 cursor-default"
+                  : adding
+                    ? "bg-blue-50 text-blue-400 cursor-wait"
+                    : "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white",
             ].join(" ")}
           >
-            {inCart
-              ? <><Check className="w-3 h-3" /> Added</>
-              : <><ShoppingCart className="w-3 h-3" /> Add</>}
+            {isEnrolled ? (
+              <><Play className="w-3 h-3 fill-current" /> Start</>
+            ) : inCart ? (
+              <><Check className="w-3 h-3" /> Added</>
+            ) : adding ? (
+              <><Loader2 className="w-3 h-3 animate-spin" /> Adding...</>
+            ) : (
+              <><ShoppingCart className="w-3 h-3" /> Add</>
+            )}
           </button>
         </div>
       </div>

@@ -12,7 +12,7 @@ const TESTIMONIALS = [
     rating: 5,
     country: "🇺🇸 United States",
     quote:
-      "EDUManage's AWS course was the most practical I've ever taken. Within 3 months I landed a Cloud Engineer role at Google. The hands-on labs made all the difference.",
+      "Defura-LMS's AWS course was the most practical I've ever taken. Within 3 months I landed a Cloud Engineer role at Google. The hands-on labs made all the difference.",
     course: "AWS Solutions Architect",
   },
   {
@@ -60,7 +60,7 @@ const TESTIMONIALS = [
     rating: 5,
     country: "🇲🇽 Mexico",
     quote:
-      "The certificate I earned through EDUManage is recognized by my employer. The platform is polished and the content quality is genuinely world-class.",
+      "The certificate I earned through Defura-LMS is recognized by my employer. The platform is polished and the content quality is genuinely world-class.",
     course: "Cybersecurity Professional",
   },
   {
@@ -72,7 +72,7 @@ const TESTIMONIALS = [
     rating: 5,
     country: "🇸🇳 Senegal",
     quote:
-      "Coming from a non-CS background, EDUManage gave me the structured learning path I needed. The mentorship and community support kept me motivated throughout.",
+      "Coming from a non-CS background, Defura-LMS gave me the structured learning path I needed. The mentorship and community support kept me motivated throughout.",
     course: "Full-Stack Development",
   },
 ];

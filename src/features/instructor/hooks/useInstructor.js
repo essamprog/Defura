@@ -23,10 +23,12 @@ const useInstructor = () => {
 
         setStats({
           // Stat card values — match InstructorDashboardPage
-          revenue:    dash.stats.totalEarnings,
-          students:   dash.stats.totalStudents,
-          courses:    dash.stats.totalCourses,
-          avgRating:  dash.stats.avgRating,
+          revenue:          dash.stats.totalEarnings,     // gross revenue (100%)
+          availableBalance: dash.stats.availableBalance,  // 70% net (orders > 7 days old)
+          pendingBalance:   dash.stats.pendingBalance,    // 70% net (orders < 7 days, hold period)
+          students:         dash.stats.totalStudents,
+          courses:          dash.stats.totalCourses,
+          avgRating:        dash.stats.avgRating,
         });
 
         setRevenue(dash.revenue ?? []);
@@ -50,9 +52,15 @@ const useInstructor = () => {
   const deleteCourse = useCallback(async (id) => {
     try {
       await instructorService.deleteCourse(id);
-      setCourses((prev) => prev.filter((c) => (c.id ?? c._id) !== id));
+      // Filter by either id or _id — backend returns both
+      setCourses((prev) => prev.filter((c) => {
+        const courseId = c._id ?? c.id;
+        return String(courseId) !== String(id);
+      }));
     } catch (err) {
-      setError(err.response?.data?.message ?? "Failed to delete course.");
+      const msg = err.response?.data?.message ?? "Failed to delete course.";
+      setError(msg);
+      alert(msg); // surface to user immediately
     }
   }, []);
 

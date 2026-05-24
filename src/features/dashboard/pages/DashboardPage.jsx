@@ -150,44 +150,68 @@ const DashboardPage = () => {
             />
           ) : (
             <div className="space-y-4">
-              {enrolled.map(course => (
-                <div
-                  key={course._id}
-                  onClick={() => navigate(ROUTES.learning(course._id, "next"))}
-                  className="group flex gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer border border-transparent hover:border-gray-100"
-                >
-                  {/* Thumbnail */}
-                  <div className="w-20 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-100">
-                    {course.image ? (
-                      <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-                        <BookOpen className="w-5 h-5 text-blue-200" />
+              {enrolled.map(course => {
+                const courseId = course.id ?? course._id;
+                const isCompleted = course.enrollmentStatus === "completed" || (course.progress ?? 0) === 100;
+                return (
+                  <div
+                    key={courseId}
+                    onClick={() => navigate(ROUTES.learning(courseId, "start"))}
+                    className={`group flex gap-4 p-3 rounded-xl transition-colors cursor-pointer border ${isCompleted ? "bg-emerald-50 border-emerald-100 hover:bg-emerald-100" : "hover:bg-gray-50 border-transparent hover:border-gray-100"}`}
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative w-20 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+                      {course.image ? (
+                        <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+                          <BookOpen className="w-5 h-5 text-blue-200" />
+                        </div>
+                      )}
+                      {isCompleted && (
+                        <div className="absolute inset-0 bg-emerald-900/40 flex items-center justify-center">
+                          <CheckCircle className="w-6 h-6 text-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="text-sm font-semibold text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                          {course.title}
+                        </h3>
+                        {isCompleted && (
+                          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-md uppercase tracking-wide">
+                            Completed
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
+                      <p className="text-xs text-gray-400 mb-2">
+                        {isCompleted ? "🎓 Course finished — View your certificate" : `Next: ${course.lastLesson ?? "Start learning"}`}
+                      </p>
+                      <ProgressBar value={course.progress ?? 0} height="sm" color={isCompleted ? "green" : (course.progress ?? 0) >= 80 ? "green" : "blue"} />
+                      <div className="flex items-center justify-between mt-1.5">
+                        <p className="text-xs text-gray-400">{course.completedLessons ?? 0}/{course.totalLessons ?? 0} lessons</p>
+                        <p className={`text-xs font-semibold ${isCompleted ? "text-emerald-600" : "text-gray-600"}`}>{course.progress ?? 0}%</p>
+                      </div>
+                    </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                      {course.title}
-                    </h3>
-                    <p className="text-xs text-gray-400 mb-2">Next: {course.lastLesson ?? "Start learning"}</p>
-                    <ProgressBar value={course.progress ?? 0} height="sm" color={(course.progress ?? 0) >= 80 ? "green" : "blue"} />
-                    <div className="flex items-center justify-between mt-1.5">
-                      <p className="text-xs text-gray-400">{course.completedLessons ?? 0}/{course.totalLessons ?? 0} lessons</p>
-                      <p className="text-xs font-semibold text-gray-600">{course.progress ?? 0}%</p>
+                    {/* Action icon */}
+                    <div className="shrink-0 self-center">
+                      {isCompleted ? (
+                        <div className="w-8 h-8 rounded-full bg-emerald-100 group-hover:bg-emerald-500 flex items-center justify-center transition-colors">
+                          <Award className="w-4 h-4 text-emerald-600 group-hover:text-white transition-colors" />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-600 flex items-center justify-center transition-colors">
+                          <Play className="w-3.5 h-3.5 text-blue-600 group-hover:text-white fill-current ml-0.5 transition-colors" />
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* Play button */}
-                  <div className="shrink-0 self-center">
-                    <div className="w-8 h-8 rounded-full bg-blue-50 group-hover:bg-blue-600 flex items-center justify-center transition-colors">
-                      <Play className="w-3.5 h-3.5 text-blue-600 group-hover:text-white fill-current ml-0.5 transition-colors" />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -229,13 +253,13 @@ const DashboardPage = () => {
           <div className="mt-6 pt-5 border-t border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-gray-700">Weekly Goal</p>
-              <p className="text-xs text-gray-400">{Math.round(stats?.hoursLearned ?? 0)}h / 7h</p>
+              <p className="text-xs text-gray-400">{Math.round(stats?.weeklyHours ?? 0)}h / 7h</p>
             </div>
-            <ProgressBar value={Math.min(stats?.hoursLearned ?? 0, 7)} max={7} color="indigo" height="sm" />
+            <ProgressBar value={Math.min(stats?.weeklyHours ?? 0, 7)} max={7} color="indigo" height="sm" />
             <p className="text-xs text-gray-400 mt-1.5">
-              {(stats?.hoursLearned ?? 0) >= 7
+              {(stats?.weeklyHours ?? 0) >= 7
                 ? "🎉 Weekly goal achieved! Great job!"
-                : `${Math.max(0, 7 - Math.round(stats?.hoursLearned ?? 0))} more hours to hit your goal this week 💪`}
+                : `${Math.max(0, 7 - Math.round(stats?.weeklyHours ?? 0))} more hours to hit your goal this week 💪`}
             </p>
           </div>
         </div>

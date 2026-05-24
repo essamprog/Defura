@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, ChevronDown, RefreshCw, ShoppingCart } from "lucide-react";
+import { Search, ChevronDown, RefreshCw, ShoppingCart, RotateCcw } from "lucide-react";
 import { Badge, Pagination, Spinner } from "@/components/ui";
 import { EmptyState } from "@/components/common";
 import adminService from "../services/adminService";
@@ -32,7 +32,7 @@ const AdminOrdersPage = () => {
   const PER = 6;
 
   const filtered  = orders.filter(o =>
-    (o.user.toLowerCase().includes(search.toLowerCase()) || o._id.toLowerCase().includes(search.toLowerCase())) &&
+    (o.user.toLowerCase().includes(search.toLowerCase()) || String(o._id).toLowerCase().includes(search.toLowerCase())) &&
     (status === "All Status" || o.status === status)
   );
   const paginated  = filtered.slice((page - 1) * PER, page * PER);
@@ -41,8 +41,27 @@ const AdminOrdersPage = () => {
   const totalRevenue  = orders.filter(o => o.status === "completed").reduce((s, o) => s + o.amount, 0);
   const totalRefunded = orders.filter(o => o.status === "refunded").reduce((s, o) => s + o.amount, 0);
 
-  const issueRefund = (id) =>
-    setOrders(p => p.map(o => o._id === id ? { ...o, status:"refunded" } : o));
+  const issueRefund = async (id) => {
+    if (!window.confirm("Are you sure you want to refund this order?")) return;
+    try {
+      await adminService.refundOrder(id);
+      setOrders(p => p.map(o => o._id === id ? { ...o, status: "refunded" } : o));
+    } catch (err) {
+      console.error("Failed to refund order:", err);
+      alert("Failed to refund order: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const cancelRefund = async (id) => {
+    if (!window.confirm("Are you sure you want to undo the refund for this order?")) return;
+    try {
+      await adminService.cancelRefundOrder(id);
+      setOrders(p => p.map(o => o._id === id ? { ...o, status: "completed" } : o));
+    } catch (err) {
+      console.error("Failed to undo refund:", err);
+      alert("Failed to undo refund: " + (err.response?.data?.message || err.message));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -112,6 +131,11 @@ const AdminOrdersPage = () => {
                     {o.status === "completed" && (
                       <button onClick={() => issueRefund(o._id)} className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-amber-600 hover:bg-amber-50 px-2 py-1 rounded-lg transition-all">
                         <RefreshCw className="w-3 h-3" /> Refund
+                      </button>
+                    )}
+                    {o.status === "refunded" && (
+                      <button onClick={() => cancelRefund(o._id)} className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded-lg transition-all">
+                        <RotateCcw className="w-3 h-3" /> Undo Refund
                       </button>
                     )}
                   </td>
