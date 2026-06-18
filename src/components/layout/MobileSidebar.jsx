@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { X, BookOpen, LogOut } from "lucide-react";
+import { X, LogOut } from "lucide-react";
 import { ROUTES } from "../../constants";
 import { useAuthStore, useUIStore } from "../../store";
 import Avatar from "../ui/Avatar";
@@ -56,10 +56,12 @@ const MobileSidebar = ({ navItems = [], accentColor = "blue" }) => {
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => { closeMobileSidebar(); navigate(ROUTES.HOME); }}
           >
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-base font-bold text-gray-900">
+            <img
+              src="/assets/images/Defura_logo.png"
+              alt="DefuraLMS Logo"
+              className="h-11 w-auto object-contain"
+            />
+            <span className="text-lg font-bold text-gray-900">
               Defura<span className="text-blue-600">LMS</span>
             </span>
           </div>

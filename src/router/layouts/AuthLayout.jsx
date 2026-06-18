@@ -1,105 +1,139 @@
-import { Outlet, Link } from "react-router-dom";
-import { BookOpen, Star, Users, Award } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Outlet, Link, useLocation } from "react-router-dom";
+import { User } from "lucide-react";
+import { Navbar, Footer } from "../../components/layout";
 import { ROUTES } from "../../constants";
 
-// ─── Social Proof Stats ───────────────────────────────────────────────────────
-const stats = [
-  { icon: <Users className="w-4 h-4" />, value: "+50,000", label: "Active learners" },
-  { icon: <BookOpen className="w-4 h-4" />, value: "+500", label: "Professional courses" },
-  { icon: <Award className="w-4 h-4" />, value: "+200", label: "Expert instructors" },
-  { icon: <Star className="w-4 h-4" />, value: "4.8", label: "Platform rating" },
-];
-
 const AuthLayout = () => {
+  const location = useLocation();
+  const path = location.pathname;
+
+  const [activePath, setActivePath] = useState(path);
+  const [iconFade, setIconFade] = useState(true);
+  const isFirstRender = useRef(true);
+
+  // Smoothly cross-fade the icon and text at the middle of the slide transition (500ms)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setIconFade(false);
+    const timeout = setTimeout(() => {
+      setActivePath(path);
+      setIconFade(true);
+    }, 500); // 500ms is exactly half of the 1000ms slide duration
+    return () => clearTimeout(timeout);
+  }, [path]);
+
+  // Determine contents of the slider banner dynamically based on the delayed activePath
+  let bannerTitle = "Welcome Back!";
+  let bannerDesc = "Already have an account? Sign in to access your learning portal.";
+
+  if (activePath === ROUTES.LOGIN) {
+    bannerTitle = "Hello Friend!";
+    bannerDesc = "Don't have an account yet? Register today and start learning.";
+  } else if (activePath === ROUTES.FORGOT_PASSWORD || activePath === ROUTES.RESET_PASSWORD) {
+    bannerTitle = "Need Help?";
+    bannerDesc = "Remember your password? Go back to the sign in page.";
+  }
+
+  // Calculate button link instantly on path changes so it is immediately clickable
+  const bannerBtnLink = path === ROUTES.LOGIN ? ROUTES.REGISTER : ROUTES.LOGIN;
+  const bannerBtnText = path === ROUTES.LOGIN ? "Sign Up" : "Sign In";
+
   return (
-    <div className="min-h-screen flex" dir="ltr">
+    <div className="auth-layout min-h-screen bg-slate-50 flex flex-col" dir="ltr">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+        .auth-title {
+          font-family: 'Outfit', sans-serif !important;
+          font-weight: 800 !important;
+          letter-spacing: -0.02em !important;
+        }
+      `}</style>
+      {/* ── Top Navigation ─────────────────────────────────────── */}
+      <Navbar />
 
-      {/* ── Left Panel (hidden on mobile) ─────────────────────── */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-5/12 bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex-col justify-between p-10 relative overflow-hidden">
+      {/* ── Main Content Area ───────────────────────────────────── */}
+      <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Soft background ambient glowing circles */}
+        <div className="absolute top-[20%] left-[-10%] w-[35%] h-[35%] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
 
-        {/* Background decoration */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/3 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/3" />
-          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
-        </div>
+        {/* Combined Sliding Card */}
+        <div className="w-full max-w-5xl h-[620px] bg-white rounded-[32px] shadow-2xl border border-gray-200 overflow-hidden relative flex z-10">
 
-        {/* Logo */}
-        <Link to={ROUTES.HOME} className="relative inline-flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold text-white">Defura</span>
-        </Link>
+          {/* Sliding Overlay Panel (Left/Right - 50% width) */}
+          <div
+            className={[
+              "hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-10 md:p-12 flex-col justify-center items-center text-center absolute top-0 bottom-0 h-full transition-all duration-[1000ms] ease-in-out z-20",
+              path === ROUTES.LOGIN
+                ? "left-[50%] rounded-r-[32px] rounded-l-[128px]"
+                : "left-0 rounded-l-[32px] rounded-r-[128px]"
+            ].join(" ")}
+          >
+            {/* Background design elements */}
+            <div className="absolute top-[-10%] left-[-10%] w-36 h-36 border border-white/10 rounded-full pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[20%] w-48 h-48 bg-white/5 rounded-full pointer-events-none" />
 
-        {/* Headline */}
-        <div className="relative">
-          <h2 className="text-3xl font-bold text-white leading-snug mb-4">
-            Start your learning journey
-            <br />
-            <span className="text-blue-200">with top courses and expert instructors</span>
-          </h2>
-          <p className="text-blue-100 text-sm leading-relaxed mb-8 max-w-sm">
-            Defura brings professional trainers and flexible online learning
-            together so you can reach your career goals faster.
-          </p>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            {stats.map(({ icon, value, label }) => (
-              <div
-                key={label}
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-3 flex items-center gap-3 border border-white/10"
-              >
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-white shrink-0">
-                  {icon}
+            {/* Fading Content Wrapper */}
+            <div className={["flex flex-col items-center transition-all duration-300", iconFade ? "opacity-100 scale-100" : "opacity-0 scale-95"].join(" ")}>
+              {/* Dynamic Icon/Logo based on active page */}
+              {activePath === ROUTES.REGISTER ? (
+                /* Person Icon for Registration state */
+                <div className="w-20 h-20 bg-white/15 backdrop-blur-md rounded-full flex items-center justify-center mb-6 border border-white/20 shadow-lg relative z-10 transition-transform duration-300 hover:scale-105">
+                  <User className="w-11 h-11 text-white" />
                 </div>
-                <div>
-                  <p className="text-white font-bold text-sm leading-none mb-0.5">
-                    {value}
-                  </p>
-                  <p className="text-blue-200 text-xs">{label}</p>
+              ) : (
+                /* Website Logo & Name for Login/other states */
+                <div className="flex flex-col items-center mb-6 relative z-10">
+                  <div className="w-20 h-20 bg-white/15 backdrop-blur-md rounded-full flex items-center justify-center mb-3 border border-white/20 shadow-lg transition-transform duration-300 hover:scale-105">
+                    <img
+                      src="/assets/images/Defura_logo.png"
+                      alt="DefuraLMS Logo"
+                      className="w-18 h-18 object-contain"
+                    />
+                  </div>
+                  <span className="text-xl font-extrabold text-white tracking-tight">
+                    Defura<span className="text-blue-200">LMS</span>
+                  </span>
                 </div>
-              </div>
-            ))}
+              )}
+
+              {/* Banner Content */}
+              <h2 className="auth-title text-4xl font-extrabold mb-4 tracking-tight relative z-10">
+                {bannerTitle}
+              </h2>
+              <p className="text-blue-100 text-sm leading-relaxed mb-8 max-w-xs relative z-10">
+                {bannerDesc}
+              </p>
+            </div>
+
+            {/* Action Toggle Button (Calculated instantly, not delayed) */}
+            <Link
+              to={bannerBtnLink}
+              className="border-2 border-white/40 hover:bg-white hover:text-blue-600 hover:border-white px-8 py-2.5 rounded-full text-sm font-semibold tracking-wider uppercase transition-all duration-200 shadow-md hover:shadow-lg relative z-10"
+            >
+              {bannerBtnText}
+            </Link>
           </div>
-        </div>
 
-        {/* Bottom quote */}
-        <p className="relative text-xs text-blue-300">
-          © {new Date().getFullYear()} Defura. All rights reserved.
-        </p>
-      </div>
-
-      {/* ── Right Panel (form) ────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gray-50">
-
-        {/* Mobile Logo */}
-        <Link
-          to={ROUTES.HOME}
-          className="lg:hidden inline-flex items-center gap-2 mb-8"
-        >
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <BookOpen className="w-4 h-4 text-white" />
+          {/* Sliding Form Container (50% width) */}
+          <div
+            className={[
+              "w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white absolute top-0 bottom-0 h-full transition-all duration-[1000ms] ease-in-out z-10",
+              path === ROUTES.LOGIN ? "left-0" : "left-0 md:left-[50%]"
+            ].join(" ")}
+          >
+            <Outlet />
           </div>
-          <span className="text-lg font-bold text-gray-900">
-            Defura<span className="text-blue-600">LMS</span>
-          </span>
-        </Link>
 
-        {/* Card */}
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <Outlet />
         </div>
+      </main>
 
-        {/* Back link */}
-        <Link
-          to={ROUTES.HOME}
-          className="mt-6 text-sm text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          ← Back to home
-        </Link>
-      </div>
+      {/* ── Footer ─────────────────────────────────────────────── */}
+      <Footer />
     </div>
   );
 };

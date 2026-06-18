@@ -146,6 +146,7 @@ const AddNewLessonPage = () => {
   const [dragOver,    setDragOver]    = useState(false);
   const [videoFile,   setVideoFile]   = useState(null);
   const [uploadPct,   setUploadPct]   = useState(null);
+  const [displayedPct, setDisplayedPct] = useState(null);
   const [attachments, setAttachments] = useState([]);
   const [saving,      setSaving]      = useState(false);
   const [toast,       setToast]       = useState(null);
@@ -157,6 +158,24 @@ const AddNewLessonPage = () => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+  useEffect(() => {
+    if (uploadPct === null) {
+      setDisplayedPct(null);
+      return;
+    }
+    let current = displayedPct || 0;
+    const interval = setInterval(() => {
+      const target = uploadPct >= 100 ? 95 : uploadPct;
+      if (current < target) {
+        current += Math.min(3, target - current);
+      } else if (current < 95) {
+        current += 0.4;
+      }
+      setDisplayedPct(Math.min(95, Math.round(current)));
+    }, 80);
+    return () => clearInterval(interval);
+  }, [uploadPct]);
 
   // ── 1. Load courses ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -333,6 +352,9 @@ const AddNewLessonPage = () => {
             onUploadProgress: e =>
               setUploadPct(Math.round((e.loaded / e.total) * 100)),
           });
+          setUploadPct(100);
+          setDisplayedPct(100);
+          await new Promise(r => setTimeout(r, 600));
           setUploadPct(null);
         }
 
@@ -367,6 +389,9 @@ const AddNewLessonPage = () => {
             onUploadProgress: e =>
               setUploadPct(Math.round((e.loaded / e.total) * 100)),
           });
+          setUploadPct(100);
+          setDisplayedPct(100);
+          await new Promise(r => setTimeout(r, 600));
           setUploadPct(null);
         }
 
@@ -672,16 +697,21 @@ const AddNewLessonPage = () => {
               {form.videoTab === "direct" ? (
                 <>
                   {/* Upload progress */}
-                  {uploadPct !== null && (
+                  {displayedPct !== null && (
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                        <span>Uploading video…</span>
-                        <span className="font-bold text-violet-600">{uploadPct}%</span>
+                        <span>{uploadPct >= 100 ? "Processing on server..." : "Uploading video…"}</span>
+                        <span className="font-bold text-violet-600">{displayedPct}%</span>
                       </div>
                       <div className="w-full h-2 rounded-full bg-gray-100 overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-300"
-                          style={{ width: `${uploadPct}%`, background: "#7C3AED" }}
+                          style={{
+                            width: `${displayedPct}%`,
+                            background: displayedPct >= 100
+                              ? 'linear-gradient(90deg, #10b981, #059669)'
+                              : '#7C3AED'
+                          }}
                         />
                       </div>
                     </div>

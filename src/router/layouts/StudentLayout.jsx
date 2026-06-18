@@ -19,6 +19,9 @@ import {
   Tag,
   FileText,
   ShoppingBag,
+  UserCheck,
+  DollarSign,
+  Wallet,
 } from "lucide-react";
 
 const StudentLayout = () => {
@@ -54,8 +57,11 @@ const StudentLayout = () => {
     navItems = [
       { label: "Overview", icon: LayoutDashboard, path: ROUTES.ADMIN_DASHBOARD, end: true },
       { label: "Users", icon: Users, path: ROUTES.ADMIN_USERS, end: true },
+      { label: "Applications", icon: UserCheck, path: ROUTES.ADMIN_APPLICATIONS, end: true },
       { label: "Courses", icon: BookOpen, path: ROUTES.ADMIN_COURSES, end: true },
       { label: "Orders", icon: ShoppingBag, path: ROUTES.ADMIN_ORDERS, end: true },
+      { label: "Instructors Financials", icon: DollarSign, path: ROUTES.ADMIN_INSTRUCTORS_FINANCIALS, end: true },
+      { label: "Withdrawals", icon: Wallet, path: ROUTES.ADMIN_WITHDRAWALS, end: true },
       { label: "Categories", icon: Tag, path: ROUTES.ADMIN_CATEGORIES, end: true },
       { label: "Settings", icon: Settings, path: ROUTES.ADMIN_SETTINGS, end: true },
       { label: "Audit Logs", icon: FileText, path: ROUTES.ADMIN_AUDIT_LOGS, end: true },
@@ -72,11 +78,12 @@ const StudentLayout = () => {
   } else if (user?.role === "instructor") {
     accentColor = "indigo";
     navItems = [
-      { label: "Overview",       icon: LayoutDashboard, path: ROUTES.INSTRUCTOR_DASHBOARD,    end: true },
-      { label: "My Courses",     icon: Video,           path: ROUTES.INSTRUCTOR_COURSES,      end: true },
-      { label: "Create Course",  icon: CirclePlus,      path: ROUTES.INSTRUCTOR_CREATE_COURSE, end: true },
-      { label: "My Students",    icon: Users,           path: ROUTES.INSTRUCTOR_STUDENTS,     end: true },
-      { label: "Analytics",      icon: BarChart2,       path: ROUTES.INSTRUCTOR_ANALYTICS,    end: true },
+      { label: "Overview", icon: LayoutDashboard, path: ROUTES.INSTRUCTOR_DASHBOARD, end: true },
+      { label: "My Courses", icon: Video, path: ROUTES.INSTRUCTOR_COURSES, end: true },
+      { label: "Create Course", icon: CirclePlus, path: ROUTES.INSTRUCTOR_CREATE_COURSE, end: true },
+      { label: "My Students", icon: Users, path: ROUTES.INSTRUCTOR_STUDENTS, end: true },
+      { label: "Analytics", icon: BarChart2, path: ROUTES.INSTRUCTOR_ANALYTICS, end: true },
+      { label: "Financials", icon: Wallet, path: ROUTES.INSTRUCTOR_FINANCIALS, end: true },
       {
         label: "Notifications",
         icon: Bell,
@@ -84,21 +91,21 @@ const StudentLayout = () => {
         end: true,
         badge: unreadCount,
       },
-      { label: "Settings",       icon: Settings,        path: ROUTES.INSTRUCTOR_SETTINGS,     end: true },
-      { label: "Browse Courses",        icon: Compass,  path: ROUTES.COURSES,                 end: true },
-      { label: "Cart",                  icon: ShoppingCart, path: ROUTES.CART,                end: true, badge: cartBadge },
-      { label: "My Purchased Courses",  icon: BookOpen, path: ROUTES.INSTRUCTOR_MY_LEARNING,  end: true },
-      { label: "Profile",               icon: User,     path: ROUTES.INSTRUCTOR_PROFILE,      end: true },
+      { label: "Settings", icon: Settings, path: ROUTES.INSTRUCTOR_SETTINGS, end: true },
+      { label: "Browse Courses", icon: Compass, path: ROUTES.COURSES, end: true },
+      { label: "Cart", icon: ShoppingCart, path: ROUTES.CART, end: true, badge: cartBadge },
+      { label: "My Purchased Courses", icon: BookOpen, path: ROUTES.INSTRUCTOR_MY_LEARNING, end: true },
+      { label: "Profile", icon: User, path: ROUTES.INSTRUCTOR_PROFILE, end: true },
     ];
   } else {
     // Default to student mode
     accentColor = "blue";
     navItems = [
-      { label: "Overview",      icon: LayoutDashboard, path: ROUTES.DASHBOARD,     end: true },
-      { label: "My Courses",    icon: BookOpen,        path: ROUTES.MY_COURSES,    end: true },
-      { label: "Browse",        icon: Compass,         path: ROUTES.COURSES,       end: true },
-      { label: "Certificates",  icon: Award,           path: ROUTES.CERTIFICATES,  end: true },
-      { label: "Cart",          icon: ShoppingCart,    path: ROUTES.CART,          end: true, badge: cartBadge },
+      { label: "Overview", icon: LayoutDashboard, path: ROUTES.DASHBOARD, end: true },
+      { label: "My Courses", icon: BookOpen, path: ROUTES.MY_COURSES, end: true },
+      { label: "Browse", icon: Compass, path: ROUTES.COURSES, end: true },
+      { label: "Certificates", icon: Award, path: ROUTES.CERTIFICATES, end: true },
+      { label: "Cart", icon: ShoppingCart, path: ROUTES.CART, end: true, badge: cartBadge },
       {
         label: "Notifications",
         icon: Bell,
@@ -106,7 +113,7 @@ const StudentLayout = () => {
         end: true,
         badge: unreadCount,
       },
-      { label: "Profile",       icon: User,            path: ROUTES.PROFILE,       end: true },
+      { label: "Profile", icon: User, path: ROUTES.PROFILE, end: true },
     ];
   }
 

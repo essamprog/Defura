@@ -5,7 +5,6 @@ import {
   X,
   ShoppingCart,
   ChevronDown,
-  BookOpen,
   LayoutDashboard,
   LogOut,
   User,
@@ -184,6 +183,7 @@ const navLinks = [
   { label: "Home", path: ROUTES.HOME },
   { label: "Courses", path: ROUTES.COURSES },
   { label: "Instructors", path: ROUTES.INSTRUCTORS },
+  { label: "About Team", path: ROUTES.ABOUT },
 ];
 
 // ── Main Navbar ───────────────────────────────────────────────────────────────
@@ -224,27 +224,29 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
 
           {/* ── Logo ─────────────────────────────────────────── */}
-          <Link to={ROUTES.HOME} className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-gray-900">
+          <Link to={ROUTES.HOME} className="flex items-center shrink-0">
+            <img
+              src="/assets/images/Defura_logo.png"
+              alt="DefuraLMS Logo"
+              className="h-12 w-auto object-contain"
+            />
+            <span className="text-2xl font-bold text-gray-900">
               Defura<span className="text-blue-600">LMS</span>
             </span>
           </Link>
 
           {/* ── Desktop Nav ───────────────────────────────────── */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
                   [
-                    "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    "relative py-1.5 text-[15px] font-semibold transition-colors duration-200 after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:transition-transform after:duration-200 after:origin-left",
                     isActive
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+                      ? "text-blue-600 after:bg-blue-600 after:scale-x-100"
+                      : "text-gray-600 hover:text-gray-900 after:bg-gray-300 after:scale-x-0 hover:after:scale-x-100",
                   ].join(" ")
                 }
               >
@@ -259,12 +261,12 @@ const Navbar = () => {
             {/* Cart */}
             <Link
               to={ROUTES.CART}
-              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="relative p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
               aria-label="Shopping cart"
             >
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className="w-6 h-6" />
               {items.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                <span className="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-blue-600 text-white text-[10px] rounded-full flex items-center justify-center font-medium">
                   {items.length}
                 </span>
               )}
@@ -325,11 +327,11 @@ const Navbar = () => {
               </Dropdown>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => navigate(ROUTES.LOGIN)}>
+                <Button variant="ghost" size="md" onClick={() => navigate(ROUTES.LOGIN)}>
                   Login
                 </Button>
-                <Button size="sm" onClick={() => navigate(ROUTES.REGISTER)}>
-                  Sign up free
+                <Button size="md" onClick={() => navigate(ROUTES.REGISTER)}>
+                  Sign up
                 </Button>
               </div>
             )}

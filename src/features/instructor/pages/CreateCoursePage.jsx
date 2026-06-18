@@ -269,6 +269,7 @@ const CreateCoursePage = () => {
   const [step,    setStep]    = useState(1);
   const [saving,  setSaving]  = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [displayedProgress, setDisplayedProgress] = useState(0);
   const [errors,  setErrors]  = useState({});
 
   // ── Real categories from DB ────────────────────────────────────────────────
@@ -285,6 +286,24 @@ const CreateCoursePage = () => {
       .finally(() => { if (!cancelled) setCategoriesLoading(false); });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!saving) {
+      setDisplayedProgress(0);
+      return;
+    }
+    let current = 0;
+    const interval = setInterval(() => {
+      const target = uploadProgress >= 100 ? 95 : uploadProgress;
+      if (current < target) {
+        current += Math.min(3, target - current);
+      } else if (current < 95) {
+        current += 0.4;
+      }
+      setDisplayedProgress(Math.min(95, Math.round(current)));
+    }, 80);
+    return () => clearInterval(interval);
+  }, [saving, uploadProgress]);
 
   const [data, setData] = useState({
     title:"", description:"", category_id:"", level:"", outcomes:"",
@@ -411,6 +430,11 @@ const CreateCoursePage = () => {
         },
       });
 
+      // Complete progress and wait a moment for completion satisfaction
+      setUploadProgress(100);
+      setDisplayedProgress(100);
+      await new Promise(r => setTimeout(r, 600));
+
       navigate(ROUTES.INSTRUCTOR_COURSES);
     } catch (err) {
       console.error("Failed to create course:", err);
@@ -478,10 +502,10 @@ const CreateCoursePage = () => {
               <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
               <div
                 className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 animate-spin"
-                style={{ animationDuration: uploadProgress >= 100 ? '0.3s' : '1s' }}
+                style={{ animationDuration: displayedProgress >= 100 ? '0.3s' : '1s' }}
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                {uploadProgress >= 100
+                {displayedProgress >= 100
                   ? <CheckCircle className="w-8 h-8 text-emerald-500" />
                   : <Upload className="w-7 h-7 text-blue-500" />
                 }
@@ -503,14 +527,14 @@ const CreateCoursePage = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-medium">
                 <span className="text-gray-500">Upload progress</span>
-                <span className="text-blue-600">{uploadProgress}%</span>
+                <span className="text-blue-600">{displayedProgress}%</span>
               </div>
               <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-300 ease-out"
                   style={{
-                    width: `${uploadProgress}%`,
-                    background: uploadProgress >= 100
+                    width: `${displayedProgress}%`,
+                    background: displayedProgress >= 100
                       ? 'linear-gradient(90deg, #10b981, #059669)'
                       : 'linear-gradient(90deg, #3b82f6, #6366f1)',
                   }}

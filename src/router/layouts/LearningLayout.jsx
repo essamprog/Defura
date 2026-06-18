@@ -1,5 +1,5 @@
 import { Outlet, Link, useParams } from "react-router-dom";
-import { BookOpen, ChevronRight, Menu } from "lucide-react";
+import { ChevronRight, Menu } from "lucide-react";
 import { ROUTES } from "../../constants";
 import { useUIStore } from "../../store";
 
@@ -35,10 +35,12 @@ const LearningLayout = () => {
 
         {/* Logo */}
         <Link to={ROUTES.HOME} className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-            <BookOpen className="w-3.5 h-3.5 text-white" />
-          </div>
-          <span className="text-sm font-bold text-white hidden sm:block">
+          <img
+            src="/assets/images/Defura_logo.png"
+            alt="DefuraLMS Logo"
+            className="h-10 w-auto object-contain"
+          />
+          <span className="text-base font-bold text-white hidden sm:block">
             Defura
           </span>
         </Link>

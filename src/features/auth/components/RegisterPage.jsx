@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Lock, ShieldCheck, ArrowRight, Check } from "lucide-react";
+import { User, Mail, Lock, ShieldCheck, ArrowRight } from "lucide-react";
 
-import { Button }       from "@/components/ui";
-import { Input }        from "@/components/ui";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { ErrorMessage } from "@/components/common";
-import { ROUTES }       from "@/constants";
-import useAuth          from "../hooks/useAuth";
-import SocialAuth       from "../components/SocialAuth";
+import { ROUTES } from "@/constants";
+import useAuth from "../hooks/useAuth";
 import PasswordStrengthBar from "../components/PasswordStrengthBar";
 import {
   validateFullName,
@@ -18,33 +17,26 @@ import {
 
 // ─── Initial State ────────────────────────────────────────────────────────────
 const FIELDS = ["fullName", "email", "password", "confirmPassword"];
-const INIT   = Object.fromEntries(FIELDS.map((k) => [k, ""]));
+const INIT = Object.fromEntries(FIELDS.map((k) => [k, ""]));
 
-// ─── Perks list (right side of AuthLayout) ───────────────────────────────────
-const PERKS = [
-  "Access 500+ professional IT courses",
-  "Earn verified certificates",
-  "Learn from industry experts",
-  "Track your progress with analytics",
-];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { register, isLoading, error, clearError } = useAuth();
 
-  const [fields,  setFields]  = useState(INIT);
-  const [errors,  setErrors]  = useState(INIT);
+  const [fields, setFields] = useState(INIT);
+  const [errors, setErrors] = useState(INIT);
   const [touched, setTouched] = useState(INIT);
-  const [agreed,  setAgreed]  = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [agreedError, setAgreedError] = useState("");
 
   // ── Validate single field ──────────────────────────────────────────────────
   const validate = (name, value) => {
     switch (name) {
-      case "fullName":       return validateFullName(value);
-      case "email":          return validateEmail(value);
-      case "password":       return validatePassword(value);
+      case "fullName": return validateFullName(value);
+      case "email": return validateEmail(value);
+      case "password": return validatePassword(value);
       case "confirmPassword":
         return validateConfirmPassword(fields.password, value);
       default: return "";
@@ -87,7 +79,7 @@ const RegisterPage = () => {
 
     // Mark all fields touched
     const allTouched = Object.fromEntries(FIELDS.map((k) => [k, true]));
-    const allErrors  = Object.fromEntries(
+    const allErrors = Object.fromEntries(
       FIELDS.map((k) => [k, validate(k, fields[k])])
     );
     setTouched(allTouched);
@@ -118,20 +110,6 @@ const RegisterPage = () => {
         </p>
       </div>
 
-      {/* Perks — compact badges */}
-      <div className="grid grid-cols-2 gap-1.5">
-        {PERKS.map((perk) => (
-          <div
-            key={perk}
-            className="flex items-start gap-1.5 text-xs text-gray-600"
-          >
-            <span className="mt-0.5 w-3.5 h-3.5 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-              <Check className="w-2.5 h-2.5 text-blue-600" strokeWidth={3} />
-            </span>
-            {perk}
-          </div>
-        ))}
-      </div>
 
       {/* Server-side error */}
       {error && <ErrorMessage message={error} />}
@@ -140,10 +118,10 @@ const RegisterPage = () => {
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {/* Full Name */}
         <Input
-          label="Full name"
           name="fullName"
           type="text"
-          placeholder="Alex Johnson"
+          size="lg"
+          placeholder="Full name"
           autoComplete="name"
           required
           value={fields.fullName}
@@ -155,10 +133,10 @@ const RegisterPage = () => {
 
         {/* Email */}
         <Input
-          label="Email address"
           name="email"
           type="email"
-          placeholder="you@example.com"
+          size="lg"
+          placeholder="Email address"
           autoComplete="email"
           required
           value={fields.email}
@@ -171,10 +149,10 @@ const RegisterPage = () => {
         {/* Password + strength */}
         <div>
           <Input
-            label="Password"
             name="password"
             type="password"
-            placeholder="Create a strong password"
+            size="lg"
+            placeholder="Password"
             autoComplete="new-password"
             required
             value={fields.password}
@@ -188,10 +166,10 @@ const RegisterPage = () => {
 
         {/* Confirm Password */}
         <Input
-          label="Confirm password"
           name="confirmPassword"
           type="password"
-          placeholder="Repeat your password"
+          size="lg"
+          placeholder="Confirm password"
           autoComplete="new-password"
           required
           value={fields.confirmPassword}
@@ -251,19 +229,18 @@ const RegisterPage = () => {
         </Button>
       </form>
 
-      {/* Social */}
-      <SocialAuth mode="sign up" />
-
-      {/* Login link */}
-      <p className="text-center text-sm text-gray-500">
-        Already have an account?{" "}
-        <Link
-          to={ROUTES.LOGIN}
-          className="font-semibold text-blue-600 hover:text-blue-700 hover:underline underline-offset-2 transition-colors"
-        >
-          Sign in
-        </Link>
-      </p>
+      {/* Mobile-only Sign In link */}
+      <div className="text-center md:hidden pt-4 border-t border-gray-100">
+        <p className="text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link
+            to={ROUTES.LOGIN}
+            className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+          >
+            Sign In
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };

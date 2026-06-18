@@ -34,6 +34,7 @@ const InstructorsPage = lazy(() => import("../features/instructor/pages/Instruct
 const InstructorPublicProfilePage = lazy(() => import("../features/instructor/pages/InstructorPublicProfilePage"));
 const InstructorInfoPage = lazy(() => import("../features/home/pages/InstructorInfoPage"));
 const BecomeInstructorPage = lazy(() => import("../features/home/pages/BecomeInstructorPage"));
+const AboutTeamPage = lazy(() => import("../features/home/pages/AboutTeamPage"));
 
 // Auth
 const LoginPage = lazy(() => import("../features/auth/pages/LoginPage"));
@@ -105,6 +106,7 @@ const router = createBrowserRouter([
       { path: ROUTES.INSTRUCTORS, element: <L><InstructorsPage /></L> },
       { path: ROUTES.INSTRUCTOR_PUBLIC_PROFILE, element: <L><InstructorPublicProfilePage /></L> },
       { path: ROUTES.INSTRUCTOR_INFO, element: <L><InstructorInfoPage /></L> },
+      { path: ROUTES.ABOUT, element: <L><AboutTeamPage /></L> },
     ],
   },
 

@@ -2,30 +2,29 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 
-import { Button }       from "@/components/ui";
-import { Input }        from "@/components/ui";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { ErrorMessage } from "@/components/common";
-import { ROUTES }       from "@/constants";
-import useAuth          from "../hooks/useAuth";
-import SocialAuth       from "../components/SocialAuth";
+import { ROUTES } from "@/constants";
+import useAuth from "../hooks/useAuth";
 import {
   validateEmail,
   validatePassword,
 } from "../utils/validation";
 
 // ─── Initial State ────────────────────────────────────────────────────────────
-const INIT_FIELDS  = { email: "", password: "" };
-const INIT_ERRORS  = { email: "", password: "" };
+const INIT_FIELDS = { email: "", password: "" };
+const INIT_ERRORS = { email: "", password: "" };
 const INIT_TOUCHED = { email: false, password: false };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const LoginPage = () => {
-  const navigate              = useNavigate();
-  const location              = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoading, error, clearError } = useAuth();
 
-  const [fields,  setFields]  = useState(INIT_FIELDS);
-  const [errors,  setErrors]  = useState(INIT_ERRORS);
+  const [fields, setFields] = useState(INIT_FIELDS);
+  const [errors, setErrors] = useState(INIT_ERRORS);
   const [touched, setTouched] = useState(INIT_TOUCHED);
   const [remember, setRemember] = useState(false);
 
@@ -34,7 +33,7 @@ const LoginPage = () => {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const validate = (name, value) => {
-    if (name === "email")    return validateEmail(value);
+    if (name === "email") return validateEmail(value);
     if (name === "password") return validatePassword(value);
     return "";
   };
@@ -66,8 +65,8 @@ const LoginPage = () => {
 
     // Touch all fields to surface errors
     const allTouched = { email: true, password: true };
-    const allErrors  = {
-      email:    validate("email",    fields.email),
+    const allErrors = {
+      email: validate("email", fields.email),
       password: validate("password", fields.password),
     };
 
@@ -100,10 +99,10 @@ const LoginPage = () => {
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {/* Email */}
         <Input
-          label="Email address"
           name="email"
           type="email"
-          placeholder="you@example.com"
+          size="lg"
+          placeholder="Email address"
           autoComplete="email"
           required
           value={fields.email}
@@ -116,10 +115,10 @@ const LoginPage = () => {
         {/* Password */}
         <div className="space-y-1">
           <Input
-            label="Password"
             name="password"
             type="password"
-            placeholder="••••••••"
+            size="lg"
+            placeholder="Password"
             autoComplete="current-password"
             required
             value={fields.password}
@@ -168,19 +167,18 @@ const LoginPage = () => {
         </Button>
       </form>
 
-      {/* Social */}
-      <SocialAuth mode="sign in" />
-
-      {/* Register link */}
-      <p className="text-center text-sm text-gray-500">
-        Don't have an account?{" "}
-        <Link
-          to={ROUTES.REGISTER}
-          className="font-semibold text-blue-600 hover:text-blue-700 hover:underline underline-offset-2 transition-colors"
-        >
-          Create one for free
-        </Link>
-      </p>
+      {/* Mobile-only Sign Up link */}
+      <div className="text-center md:hidden pt-4 border-t border-gray-100">
+        <p className="text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link
+            to={ROUTES.REGISTER}
+            className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+          >
+            Sign Up
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };

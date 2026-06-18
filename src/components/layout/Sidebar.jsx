@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { ChevronRight, BookOpen, LogOut } from "lucide-react";
+import { ChevronRight, LogOut } from "lucide-react";
 import { ROUTES } from "../../constants";
 import { useAuthStore, useUIStore } from "../../store";
 import Avatar from "../ui/Avatar";
@@ -42,11 +42,13 @@ const Sidebar = ({ navItems = [], accentColor = "blue" }) => {
           sidebarOpen ? "gap-3" : "justify-center",
         ].join(" ")}
       >
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
-          <BookOpen className="w-4 h-4 text-white" />
-        </div>
+        <img
+          src="/assets/images/Defura_logo.png"
+          alt="DefuraLMS Logo"
+          className="h-11 w-auto object-contain shrink-0"
+        />
         {sidebarOpen && (
-          <span className="text-base font-bold text-gray-900 truncate">
+          <span className="text-lg font-bold text-gray-900 truncate">
             Defura<span className="text-blue-600">-LMS</span>
           </span>
         )}

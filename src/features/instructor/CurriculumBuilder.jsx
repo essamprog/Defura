@@ -18,6 +18,7 @@ export default function CurriculumBuilder() {
   
   // Video upload state
   const [uploadingLessons, setUploadingLessons] = useState({}); // { lessonId: progress }
+  const [displayedLessons, setDisplayedLessons] = useState({}); // { lessonId: displayedProgress }
 
   const fileInputRef = useRef(null);
   const [uploadTarget, setUploadTarget] = useState(null); // { lessonId, type }
@@ -25,6 +26,33 @@ export default function CurriculumBuilder() {
   useEffect(() => {
     if (COURSE_ID && INSTRUCTOR_ID) fetchCurriculum();
   }, [COURSE_ID, INSTRUCTOR_ID]);
+
+  useEffect(() => {
+    const lessonIds = Object.keys(uploadingLessons);
+    if (lessonIds.length === 0) {
+      setDisplayedLessons({});
+      return;
+    }
+    const interval = setInterval(() => {
+      setDisplayedLessons(prev => {
+        const next = { ...prev };
+        lessonIds.forEach(id => {
+          const actual = uploadingLessons[id] || 0;
+          const target = actual >= 100 ? 95 : actual;
+          const current = prev[id] || 0;
+          if (current < target) {
+            next[id] = Math.min(95, Math.round(current + Math.min(3, target - current)));
+          } else if (current < 95) {
+            next[id] = Math.min(95, Math.round(current + 0.4));
+          } else {
+            next[id] = 95;
+          }
+        });
+        return next;
+      });
+    }, 80);
+    return () => clearInterval(interval);
+  }, [uploadingLessons]);
 
   const fetchCurriculum = async () => {
     setLoading(true);
@@ -138,6 +166,9 @@ export default function CurriculumBuilder() {
       });
 
       if (res.data.status) {
+        setUploadingLessons(prev => ({ ...prev, [lessonId]: 100 }));
+        setDisplayedLessons(prev => ({ ...prev, [lessonId]: 100 }));
+        await new Promise(r => setTimeout(r, 600));
         fetchCurriculum(); // Refresh after successful upload
       } else {
         alert(res.data.message);
@@ -153,6 +184,11 @@ export default function CurriculumBuilder() {
       }
     } finally {
       setUploadingLessons(prev => {
+        const newState = { ...prev };
+        delete newState[lessonId];
+        return newState;
+      });
+      setDisplayedLessons(prev => {
         const newState = { ...prev };
         delete newState[lessonId];
         return newState;
@@ -336,10 +372,20 @@ export default function CurriculumBuilder() {
                         {/* Progress Bar */}
                         {isUploading && (
                           <div className="mt-3">
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                              <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                              <div
+                                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${displayedLessons[lesson.id] || 0}%`,
+                                  background: (displayedLessons[lesson.id] || 0) >= 100
+                                    ? 'linear-gradient(90deg, #10b981, #059669)'
+                                    : '#2563eb'
+                                }}
+                              />
                             </div>
-                            <span className="text-xs text-gray-500 mt-1 inline-block">Uploading... {progress}%</span>
+                            <span className="text-xs text-gray-500 mt-1 inline-block">
+                              {progress >= 100 ? "Processing on server..." : `Uploading... ${displayedLessons[lesson.id] || 0}%`}
+                            </span>
                           </div>
                         )}
 
